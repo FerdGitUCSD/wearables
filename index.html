@@ -1,14 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="global.css">
-    <script src="global.js" type="module"></script>
-    <title>Wearables</title>
+  <meta charset="UTF-8">
+  <title>DSC 106 Final Proj</title>
+  <link rel="stylesheet" href="global.css">
+  <link rel="stylesheet" href="hr.css">
+  <script src="https://d3js.org/d3.v6.min.js"></script>
+  <script src="hr.js"></script>
 </head>
 <body>
-    <h1>Wearables</h1>
-    <p>This is the initial setup for our wearables data final project.</p>
+    <h1 id="">Effects of Stress on the Body</h1>
+    
+    <p>Wearable technology is rapidly transforming the landscape of personal health monitoring by providing continuous, non-invasive insights into human physiology. The dataset examined in this project, collected using the Empatica E4 wristband, comprises a diverse array of physiological signals—including blood volume pulse (BVP), electrodermal activity (EDA), skin temperature (TEMP), and accelerometer (ACC) readings—captured during carefully structured protocols designed to elicit both acute stress responses and varying intensities of physical exertion (aerobic and anaerobic exercise). Each recording spans several hours and is meticulously annotated with event markers that delineate distinct protocol segments, such as cognitive stress tasks and controlled exercise sessions.</p>
+    <p>This dataset offers a unique opportunity to explore how the autonomic nervous system modulates heart rate and other physiological responses in different contexts. By aggregating and analyzing physiological response data across multiple participants, the project aims to uncover characteristic response patterns associated with stress and exercise. Ultimately, this exploratory investigation provides valuable insights that may inform future research in stress detection, exercise physiology, and the development of personalized health monitoring solutions.</p>
+    <div id="hr1">
+        <h2>Heartrate Over Time</h2>
+        <div id="controls">
+            <div class="control-group">
+              <label for="conditionSelect">Condition:</label>
+              <select id="conditionSelect"></select>
+            </div>
+            
+            <div class="control-group">
+              <label for="protocolSelect">Protocol:</label>
+              <select id="protocolSelect"></select>
+            </div>
+          </div>
+        
+          <div id="chart"></div>
+          <div id="tooltip" class="tooltip"></div>
+    </div>
+    
 </body>
 </html>

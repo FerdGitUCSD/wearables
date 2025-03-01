@@ -1,0 +1,19 @@
+body {
+    font-family: "Times New Roman", sans-serif;
+    font: 100%/1.5;
+    max-width: min(120ch, 80vw);
+    margin-inline: max(1em, (100% - 120ch) / 2);
+}
+
+h1 {
+    font-size: 2.5em;
+    font-weight: 700;
+    margin-block: 0.5em;
+    text-align: center;
+}
+
+p {
+    font-size: 110%;
+    text-indent: 35px;
+    text-align: justify;
+}

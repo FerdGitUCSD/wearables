@@ -1,0 +1,137 @@
+/* Container styling */
+div#hr1 {
+  max-width: 960px;
+  margin-inline: auto;
+}
+
+/* Chart container */
+#chart {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+/* Individual condition chart */
+.condition-chart {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 15px;
+  background-color: #f9f9f9;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Condition title */
+.condition-chart h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: #333;
+  font-size: 18px;
+}
+
+/* Individual chart controls */
+.condition-control {
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.condition-control label {
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.condition-control select {
+  padding: 5px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+
+/* Tooltip */
+.tooltip {
+  position: absolute;
+  text-align: left;
+  padding: 8px;
+  background: white;
+  color: #333;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  pointer-events: none;
+  opacity: 0; /* hidden by default */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  font-size: 14px;
+  z-index: 100;
+}
+
+/* Chart styling */
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+/* Grid lines (dashed) */
+.grid line {
+  stroke: #ccc;
+  stroke-dasharray: 3,3;
+  opacity: 0.7;
+}
+
+.grid path {
+  stroke: none;
+}
+
+/* The HR line */
+.red-line {
+  fill: none; /* no shading under the line */
+  stroke: #ff6666;
+  stroke-width: 2px;
+}
+
+/* Axis labels */
+.axis-label {
+  font-size: 14px;
+  font-weight: bold;
+}
+
+/* Hover point */
+.hover-circle {
+  stroke: #333;
+  stroke-width: 1px;
+}
+
+/* Timeline styling */
+.segment-rect {
+  stroke: #333;
+  stroke-width: 1px;
+}
+
+.segment-label, .time-marker {
+  pointer-events: none;
+}
+
+/* No data message */
+.no-data-message {
+  fill: #666;
+}
+
+/* Error message */
+.error-message {
+  color: red;
+  font-weight: bold;
+  text-align: center;
+  margin-top: 20px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  div#hr1 {
+    max-width: 95%;
+  }
+  
+  .condition-chart {
+    padding: 10px;
+  }
+}
