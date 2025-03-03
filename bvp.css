@@ -1,0 +1,21 @@
+.bvp-line {
+    fill: none;
+    stroke-width: 2px;
+}
+
+.aerobic { stroke: blue; }
+.anaerobic { stroke: red; }
+.stress { stroke: green; }
+
+.tooltip {
+    position: absolute;
+    text-align: left;
+    padding: 8px;
+    background: white;
+    color: black;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    pointer-events: none;
+    opacity: 0;
+    font-size: 12px;
+}

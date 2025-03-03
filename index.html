@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="hr.css">
   <script src="https://d3js.org/d3.v6.min.js"></script>
   <script src="hr.js"></script>
+  <script src="bvp.js" defer></script>
 </head>
 <body>
     <h1 id="">Effects of Stress on the Body</h1>
@@ -30,6 +31,21 @@
           <div id="chart"></div>
           <div id="tooltip" class="tooltip"></div>
     </div>
+    <div id="bvp1">
+      <h2>Blood Volume Pulse (BVP) Over Time</h2>
+      <div class="control-group">
+          <label for="bvpConditionSelect">Select Condition:</label>
+          <select id="bvpConditionSelect">
+              <option value="all">All</option>
+              <option value="AEROBIC">Aerobic</option>
+              <option value="ANAEROBIC">Anaerobic</option>
+              <option value="STRESS">Stress</option>
+          </select>
+      </div>
+      <div id="bvp-chart"></div>
+      <div id="tooltip-bvp" class="tooltip"></div>
+  </div>
+  
     
 </body>
 </html>
