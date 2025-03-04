@@ -5,9 +5,11 @@
   <title>DSC 106 Final Proj</title>
   <link rel="stylesheet" href="global.css">
   <link rel="stylesheet" href="hr.css">
+  <link rel="stylesheet" href="eda.css">
   <script src="https://d3js.org/d3.v6.min.js"></script>
   <script src="hr.js"></script>
   <script src="bvp.js" defer></script>
+  <script src="eda.js" defer></script>
 </head>
 <body>
     <h1 id="">Effects of Stress on the Body</h1>
@@ -44,6 +46,23 @@
       </div>
       <div id="bvp-chart"></div>
       <div id="tooltip-bvp" class="tooltip"></div>
+  </div>
+
+  <div id="eda1">
+    <h2>Electrodermal Activity (EDA) Over Time</h2>
+    <div class="controls">
+      <label for="subjectSelect">Subject Select:</label>
+      <select id="subjectSelect"></select>
+
+      <label for="experimentSelect">Experiment Select:</label>
+      <select id="experimentSelect">
+          <option value="Stress">Stress</option>
+          <option value="Aerobic">Aerobic</option>
+          <option value="Anaerobic">Anaerobic</option>
+      </select>
+    </div>
+    <div id="eda-chart"></div>
+    <div id="tooltip-eda" class="tooltip"></div>
   </div>
   
     
