@@ -1,4 +1,4 @@
-const edadataUrl = "data/eda_data.csv";  
+const edadataUrl = "/data/eda_data.csv";  
 
 // Get the drop-down menu element
 const edasubjectSelect = document.getElementById("subjectSelect");
@@ -34,6 +34,7 @@ d3.csv(edadataUrl).then(data => {
         timestamp: parseTime(d.timestamp), 
         EDA: +d.EDA  
     }));
+    
 
     // Get all the different subjects
     const subjects = [...new Set(allEdaData.map(d => d.Subject))];
@@ -51,6 +52,7 @@ d3.csv(edadataUrl).then(data => {
     edaexperimentSelect.addEventListener("change", updateedaChart);
     console.log("Raw data:", data); // 查看原始数据
     updateedaChart();
+    
 });
 
 
