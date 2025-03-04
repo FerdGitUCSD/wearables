@@ -1,4 +1,4 @@
-const edadataUrl = "../data/eda_data.csv";  
+const edadataUrl = "data/eda_data.csv";  
 
 // Get the drop-down menu element
 const edasubjectSelect = document.getElementById("subjectSelect");
