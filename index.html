@@ -6,10 +6,13 @@
   <link rel="stylesheet" href="global.css">
   <link rel="stylesheet" href="hr.css">
   <link rel="stylesheet" href="eda.css">
+  <link rel="stylesheet" href="temp.css">
   <script src="https://d3js.org/d3.v6.min.js"></script>
   <script src="hr.js"></script>
   <script src="bvp.js" defer></script>
   <script src="eda.js" defer></script>
+  <script src="temp.js" defer></script>
+
 </head>
 <body>
     <h1 id="">Effects of Stress on the Body</h1>
@@ -64,6 +67,19 @@
     <div id="eda-chart"></div>
     <div id="tooltip-eda" class="tooltip"></div>
   </div>
+
+  <div id="container">
+    <h2>Temperature Over Time (Line Chart)</h2>
+    <div id="session-filter">
+        <label for="condition-filter">Select Condition:</label>
+        <select id="condition-filter">
+            <option value="ANAEROBIC">ANAEROBIC</option>
+            <option value="AEROBIC">AEROBIC</option>
+            <option value="STRESS">STRESS</option>
+        </select>
+    </div>
+    <svg id="temp-chart"></svg>
+</div>
   
     
 </body>
