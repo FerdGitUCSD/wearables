@@ -1,30 +1,30 @@
-const dataUrl = "../data/eda_data.csv";  
+const edadataUrl = "../data/eda_data.csv";  
 
 // Get the drop-down menu element
-const subjectSelect = document.getElementById("subjectSelect");
-const experimentSelect = document.getElementById("experimentSelect");
+const edasubjectSelect = document.getElementById("subjectSelect");
+const edaexperimentSelect = document.getElementById("experimentSelect");
 
 // Set the chart size
 const eda_width = 800, eda_height = 500, eda_margin = { top: 20, right: 30, bottom: 50, left: 50 };
 
 // Create an SVG canvas
-const svg = d3.select("#eda-chart")
+const edasvg = d3.select("#eda-chart")
     .append("svg")
     .attr("width", eda_width)
     .attr("height", eda_height);
 
 // Create a drawing area
-const chartArea = svg.append("g")
+const edachartArea = edasvg.append("g")
     .attr("transform", `translate(${eda_margin.left}, ${eda_margin.top})`);
 
 // Create a Tooltip
-const tooltip = d3.select("body").append("div")
-    .attr("class", "tooltip")
+const edatooltip = d3.select("body").append("div")
+    .attr("class", "edatooltip")
     .style("opacity", 0);
 
 let allEdaData = []; 
 
-d3.csv(dataUrl).then(data => {
+d3.csv(edadataUrl).then(data => {
     
     const parseTime = d3.timeParse("%Y-%m-%d %H:%M:%S.%L"); 
 
@@ -43,23 +43,29 @@ d3.csv(dataUrl).then(data => {
         const option = document.createElement("option");
         option.value = subject;
         option.textContent = subject;
-        subjectSelect.appendChild(option);
+        edasubjectSelect.appendChild(option);
     });
 
    
-    subjectSelect.addEventListener("change", updateedaChart);
-    experimentSelect.addEventListener("change", updateedaChart);
-
+    edasubjectSelect.addEventListener("change", updateedaChart);
+    edaexperimentSelect.addEventListener("change", updateedaChart);
+    console.log("Raw data:", data); // 查看原始数据
     updateedaChart();
 });
 
 
+console.log("Parsed timestamps:", allEdaData.map(d => d.timestamp));
+
+
 function updateedaChart() {
-    const selectedSubject = subjectSelect.value;
-    const selectedExperiment = experimentSelect.value;
+    const selectedSubject = edasubjectSelect.value;
+    const selectedExperiment = edaexperimentSelect.value;
 
     // Filter data
     const filteredData = allEdaData.filter(d => d.Subject === selectedSubject && d.Experiment === selectedExperiment);
+    console.log("Selected Subject:", selectedSubject);
+    console.log("Selected Experiment:", selectedExperiment);
+    console.log("Filtered Data:", filteredData);
 
     if (filteredData.length === 0) {
         console.error("⚠️ No data available！");
@@ -76,15 +82,15 @@ function updateedaChart() {
         .range([eda_height - eda_margin.top - eda_margin.bottom, 0]);
 
     // Clear the old X-axis and redraw it
-    svg.selectAll(".x-axis").remove();
-    svg.append("g")
+    edasvg.selectAll(".x-axis").remove();
+    edasvg.append("g")
         .attr("transform", `translate(${eda_margin.left}, ${eda_height - eda_margin.bottom})`)
         .call(d3.axisBottom(xScale).ticks(5).tickFormat(d3.timeFormat("%H:%M:%S")))
         .attr("class", "x-axis");
 
     // Clear the old Y-axis and redraw it
-    svg.selectAll(".y-axis").remove();
-    svg.append("g")
+    edasvg.selectAll(".y-axis").remove();
+    edasvg.append("g")
         .attr("transform", `translate(${eda_margin.left}, ${eda_margin.top})`)
         .call(d3.axisLeft(yScale))
         .attr("class", "y-axis");
@@ -94,7 +100,7 @@ function updateedaChart() {
         .x(d => xScale(d.timestamp))
         .y(d => yScale(d.EDA));
 
-    const path = chartArea.selectAll(".line").data([filteredData]);
+    const path = edachartArea.selectAll(".line").data([filteredData]);
 
     path.enter().append("path")
         .attr("class", "line")
