@@ -1,45 +1,49 @@
-const edadataUrl = "/data/eda_data.csv";  
+const edadataUrl = "/data/Averaged_EDA_Data.csv";  // Path to the CSV data file
 
-// Get the drop-down menu element
+// Get the HTML select elements
 const edasubjectSelect = document.getElementById("subjectSelect");
 const edaexperimentSelect = document.getElementById("experimentSelect");
 
-// Set the chart size
+// Set the SVG canvas size and margins
 const eda_width = 800, eda_height = 500, eda_margin = { top: 20, right: 30, bottom: 50, left: 50 };
 
-// Create an SVG canvas
+// Create the SVG canvas
 const edasvg = d3.select("#eda-chart")
     .append("svg")
     .attr("width", eda_width)
     .attr("height", eda_height);
 
-// Create a drawing area
+// Create the chart area
 const edachartArea = edasvg.append("g")
     .attr("transform", `translate(${eda_margin.left}, ${eda_margin.top})`);
 
-// Create a Tooltip
+// Create a tooltip (for displaying data on hover)
 const edatooltip = d3.select("body").append("div")
     .attr("class", "edatooltip")
     .style("opacity", 0);
 
-let allEdaData = []; 
+let allEdaData = []; // Store all EDA data
 
+const startTime = new Date(2025, 0, 1, 0, 0, 0); // Set the starting time
+
+// Load the CSV data
 d3.csv(edadataUrl).then(data => {
-    
-    const parseTime = d3.timeParse("%Y-%m-%d %H:%M:%S.%L"); 
+    console.log("Raw data:", data);
+    console.log("Timestamps:", data.map(d => d.timestamp));
 
+    // Convert data format
     allEdaData = data.map(d => ({
         Subject: d.Subject,  
         Experiment: d.Experiment,
-        timestamp: parseTime(d.timestamp), 
-        EDA: +d.EDA  
+        timestamp: new Date(startTime.getTime() + (+d.timestamp * 1000)),  // Convert timestamps to Date
+        EDA: +d.EDA  // Ensure EDA values are numerical
     }));
-    
 
-    // Get all the different subjects
+    console.log("Converted timestamps:", allEdaData.map(d => d.timestamp));
+
+    // Get unique subjects and populate the subject dropdown
     const subjects = [...new Set(allEdaData.map(d => d.Subject))];
 
-    // Fill in the Subject option
     subjects.forEach(subject => {
         const option = document.createElement("option");
         option.value = subject;
@@ -47,61 +51,57 @@ d3.csv(edadataUrl).then(data => {
         edasubjectSelect.appendChild(option);
     });
 
-   
+    // Add event listeners for dropdown changes
     edasubjectSelect.addEventListener("change", updateedaChart);
     edaexperimentSelect.addEventListener("change", updateedaChart);
-    console.log("Raw data:", data); // 查看原始数据
+
+    // Initial chart update
     updateedaChart();
-    
 });
 
-
-console.log("Parsed timestamps:", allEdaData.map(d => d.timestamp));
-
-
+// Function to update the chart based on selected subject and experiment
 function updateedaChart() {
     const selectedSubject = edasubjectSelect.value;
     const selectedExperiment = edaexperimentSelect.value;
 
-    // Filter data
+    // Filter data based on selection
     const filteredData = allEdaData.filter(d => d.Subject === selectedSubject && d.Experiment === selectedExperiment);
-    console.log("Selected Subject:", selectedSubject);
-    console.log("Selected Experiment:", selectedExperiment);
-    console.log("Filtered Data:", filteredData);
-
+    
     if (filteredData.length === 0) {
-        console.error("⚠️ No data available！");
+        console.error("⚠️ No data available!");
         return;
     }
 
-    // Set X/Y axis scaling
+    // Define X scale (time-based)
     const xScale = d3.scaleTime()
         .domain(d3.extent(filteredData, d => d.timestamp))
         .range([0, eda_width - eda_margin.left - eda_margin.right]);
 
+    // Define Y scale (EDA values)
     const yScale = d3.scaleLinear()
         .domain([0, d3.max(filteredData, d => d.EDA)])
         .range([eda_height - eda_margin.top - eda_margin.bottom, 0]);
 
-    // Clear the old X-axis and redraw it
+    // Remove existing X-axis and add a new one
     edasvg.selectAll(".x-axis").remove();
     edasvg.append("g")
+        .attr("class", "x-axis")
         .attr("transform", `translate(${eda_margin.left}, ${eda_height - eda_margin.bottom})`)
-        .call(d3.axisBottom(xScale).ticks(5).tickFormat(d3.timeFormat("%H:%M:%S")))
-        .attr("class", "x-axis");
+        .call(d3.axisBottom(xScale).ticks(5).tickFormat(d3.timeFormat("%M:%S")));
 
-    // Clear the old Y-axis and redraw it
+    // Remove existing Y-axis and add a new one
     edasvg.selectAll(".y-axis").remove();
     edasvg.append("g")
+        .attr("class", "y-axis")
         .attr("transform", `translate(${eda_margin.left}, ${eda_margin.top})`)
-        .call(d3.axisLeft(yScale))
-        .attr("class", "y-axis");
+        .call(d3.axisLeft(yScale));
 
-    // Bind data and draw polylines
+    // Define the line generator
     const line = d3.line()
         .x(d => xScale(d.timestamp))
         .y(d => yScale(d.EDA));
 
+    // Bind data and draw the line
     const path = edachartArea.selectAll(".line").data([filteredData]);
 
     path.enter().append("path")
@@ -113,5 +113,36 @@ function updateedaChart() {
         .attr("stroke-width", 2)
         .attr("d", line);
 
-    
+    // Remove old points and add new ones
+    //const points = edachartArea.selectAll(".point").data(filteredData);
+
+    //points.enter()
+    //    .append("circle")
+    //    .attr("class", "point")
+    //    .merge(points)
+     //   .attr("cx", d => xScale(d.timestamp))
+    //    .attr("cy", d => yScale(d.EDA))
+    //    .attr("r", 0.5)  // Point size
+    //    .attr("fill", "red");
+
+    //points.exit().remove();  // Remove old points
+
+    // Add X-axis label
+    edasvg.selectAll(".x-label").remove();
+    edasvg.append("text")
+        .attr("class", "x-label")
+        .attr("x", eda_width / 2)
+        .attr("y", eda_height - 10)  // Position below the X-axis
+        .attr("text-anchor", "middle")
+        .style("font-size", "14px")
+        .text("Time (Minutes:Seconds)");
+
+    // Add Y-axis label
+    edasvg.selectAll(".y-label").remove();
+    edasvg.append("text")
+        .attr("class", "y-label")
+        .attr("transform", `translate(15, ${eda_height / 2}) rotate(-90)`) 
+        .attr("text-anchor", "middle")
+        .style("font-size", "14px")
+        .text("EDA Value (µS)");
 }
