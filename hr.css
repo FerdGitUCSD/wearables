@@ -4,6 +4,7 @@ div#hr1 {
   margin-inline: auto;
 }
 
+
 /* Chart container */
 #chart {
   display: flex;
@@ -18,6 +19,18 @@ div#hr1 {
   padding: 15px;
   background-color: #f9f9f9;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Fix chart SVG container width */
+.condition-chart svg {
+  max-width: 100%;
+  overflow: visible;
+}
+
+
+/* Remove top and right borders */
+.chart-group path.domain:not(.axis--x path.domain):not(.axis--y path.domain) {
+  display: none;
 }
 
 /* Condition title */
@@ -135,3 +148,4 @@ div#hr1 {
     padding: 10px;
   }
 }
+
