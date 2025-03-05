@@ -1,4 +1,5 @@
-const edadataUrl = "https://ferdgitucsd.github.io/wearables//Averaged_EDA_Data.csv";// Path to the CSV data file
+const edadataUrl = "Averaged_EDA_Data.csv";
+
 
 // Get the HTML select elements
 const edasubjectSelect = document.getElementById("subjectSelect");
