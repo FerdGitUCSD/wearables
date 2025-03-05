@@ -12,7 +12,8 @@ const eda_width = 800, eda_height = 500, eda_margin = { top: 20, right: 30, bott
 const edasvg = d3.select("#eda-chart")
     .append("svg")
     .attr("width", eda_width)
-    .attr("height", eda_height);
+    .attr("height", eda_height)
+    .attr('class', 'svg-container');
 
 // Create the chart area
 const edachartArea = edasvg.append("g")
