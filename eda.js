@@ -1,4 +1,4 @@
-const edadataUrl = "/data/Averaged_EDA_Data.csv";  // Path to the CSV data file
+const edadataUrl = "https://your-username.github.io/your-repo-name/Averaged_EDA_Data.csv";// Path to the CSV data file
 
 // Get the HTML select elements
 const edasubjectSelect = document.getElementById("subjectSelect");
