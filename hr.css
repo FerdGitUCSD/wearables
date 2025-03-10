@@ -1,151 +1,316 @@
-/* Container styling */
-div#hr1 {
-  max-width: 960px;
-  margin-inline: auto;
+.timeline-group {
+  margin-top: 100px;
 }
 
-
-/* Chart container */
-#chart {
-  display: flex;
-  flex-direction: column;
-  gap: 40px;
+.grid line {
+  color: gray
 }
-
-/* Individual condition chart */
-.condition-chart {
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 15px;
-  background-color: #f9f9f9;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-}
-
-/* Fix chart SVG container width */
-.condition-chart svg {
-  max-width: 100%;
-  overflow: visible;
-}
-
-
-/* Remove top and right borders */
-.chart-group path.domain:not(.axis--x path.domain):not(.axis--y path.domain) {
-  display: none;
-}
-
-/* Condition title */
-.condition-chart h3 {
-  margin-top: 0;
-  margin-bottom: 15px;
-  color: #333;
-  font-size: 18px;
-}
-
-/* Individual chart controls */
-.condition-control {
-  margin-bottom: 15px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.condition-control label {
-  font-weight: bold;
-  font-size: 14px;
-}
-
-.condition-control select {
-  padding: 5px;
-  border-radius: 4px;
-  border: 1px solid #ccc;
-  font-size: 14px;
-}
-
-/* Tooltip */
+/* Enhanced tooltip styling */
 .tooltip {
   position: absolute;
-  text-align: left;
-  padding: 8px;
   background: white;
-  color: #333;
   border: 1px solid #ddd;
-  border-radius: 4px;
+  border-radius: 6px;
+  padding: 10px;
   pointer-events: none;
-  opacity: 0; /* hidden by default */
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  font-size: 14px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   z-index: 100;
-}
-
-/* Chart styling */
-.axis path,
-.axis line {
-  fill: none;
-  stroke: #000;
-  shape-rendering: crispEdges;
-}
-
-/* Grid lines (dashed) */
-.grid line {
-  stroke: #ccc;
-  stroke-dasharray: 3,3;
-  opacity: 0.7;
-}
-
-.grid path {
-  stroke: none;
-}
-
-/* The HR line */
-.red-line {
-  fill: none; /* no shading under the line */
-  stroke: #ff6666;
-  stroke-width: 2px;
-}
-
-/* Axis labels */
-.axis-label {
+  max-width: 250px;
   font-size: 14px;
+  transition: opacity 0.2s;
+}
+
+.tooltip-header {
   font-weight: bold;
+  font-size: 16px;
+  margin-bottom: 5px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 3px;
 }
 
-/* Hover point */
-.hover-circle {
-  stroke: #333;
-  stroke-width: 1px;
+.tooltip-hr {
+  margin: 5px 0;
 }
 
-/* Timeline styling */
-.segment-rect {
-  stroke: #333;
-  stroke-width: 1px;
+.tooltip-time {
+  font-style: italic;
+  color: #eee;
+  margin-bottom: 5px;
 }
 
-.segment-label, .time-marker {
-  pointer-events: none;
+.tooltip-zone {
+  margin-top: 5px;
 }
 
-/* No data message */
-.no-data-message {
-  fill: #666;
+.tooltip-physiology {
+  margin-top: 5px;
+  font-size: 12px;
+  font-style: italic;
+  color: #333;
+  border-top: 1px dotted #ccc;
+  padding-top: 3px;
 }
 
-/* Error message */
-.error-message {
-  color: red;
-  font-weight: bold;
+.tooltip-hint {
+  font-size: 11px;
+  font-style: italic;
+  color: #777;
+  margin-top: 5px;
+}
+
+/* Info panel styling */
+.info-panel {
+  position: fixed;
+  top: 50px;
+  right: 20px;
+  width: 300px;
+  max-height: 80vh;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  overflow-y: auto;
+}
+
+.close-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #555;
+}
+
+.close-button:hover {
+  color: #000;
+}
+
+.info-content {
+  margin-top: 10px;
   text-align: center;
-  margin-top: 20px;
 }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  div#hr1 {
-    max-width: 95%;
-  }
-  
-  .condition-chart {
-    padding: 10px;
-  }
+.info-content h3 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.segment-duration {
+  font-style: italic;
+  color: #555;
+  margin-bottom: 15px;
+}
+
+.segment-color-indicator {
+  width: 100%;
+  height: 8px;
+  margin-bottom: 15px;
+  border-radius: 4px;
+}
+
+.segment-description, .physiological-response {
+  margin-bottom: 15px;
+}
+
+.segment-description h4, .physiological-response h4 {
+  margin-bottom: 5px;
+  color: #555;
+}
+
+/* Comparison panel styling */
+.comparison-panel {
+  position: fixed;
+  top: 50px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 600px;
+  max-height: 80vh;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  overflow-y: auto;
+}
+
+.comparison-panel h3 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  color: #333;
+  text-align: center;
+}
+
+.comparison-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 15px;
+}
+
+.comparison-table th, .comparison-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+.comparison-table th {
+  background-color: #f5f5f5;
+}
+
+.comparison-explanation {
+  background-color: #f9f9f9;
+  border-radius: 5px;
+  padding: 10px;
+}
+
+.comparison-explanation h4 {
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+.comparison-explanation ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.comparison-explanation li {
+  margin-bottom: 5px;
+}
+
+/* Feature indicator styling */
+.feature-indicator, .zone-indicator {
+  width: 100%;
+  height: 6px;
+  margin: 10px 0;
+  border-radius: 3px;
+}
+
+.feature-hr, .feature-time {
+  margin-bottom: 5px;
+  color: #555;
+}
+
+/* Physiological legend styling */
+.physiological-legend {
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 10px;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.physiological-legend h4 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  text-align: center;
+  font-size: 16px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.legend-item:hover {
+  background-color: #f0f0f0;
+}
+
+.color-swatch {
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+  margin-right: 10px;
+}
+
+.zone-text {
+  flex: 1;
+}
+
+/* Introduction section styling */
+.introduction {
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 15px 20px;
+  margin-bottom: 30px;
+  border-left: 5px solid #3366cc;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  text-align: left;
+}
+
+.introduction h2 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  color: #333;
+  text-align: center;
+}
+
+.introduction p {
+  margin-bottom: 10px;
+}
+
+.introduction ul {
+  margin-top: 5px;
+  padding-left: 25px;
+}
+
+.introduction li {
+  margin-bottom: 5px;
+}
+
+/* Control elements styling */
+.compare-protocols {
+  display: flex;
+  align-items: center;
+  margin-left: 15px;
+}
+
+.compare-protocols input[type="checkbox"] {
+  margin-right: 5px;
+}
+
+.view-differences-btn {
+  margin-left: 15px;
+  padding: 5px 10px;
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background-color 0.2s;
+}
+
+.view-differences-btn:hover {
+  background-color: #e0e0e0;
+}
+
+/* Annotations styling */
+.annotation {
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+.annotation:hover {
+  opacity: 1;
+}
+
+/* Chart legend styling */
+.chart-legend rect {
+  opacity: 0.9;
+}
+
+/* Interactive segments styling */
+.segment-rect {
+  transition: opacity 0.2s;
 }
 

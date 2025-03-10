@@ -9,6 +9,9 @@ const timelineHeight = 60;
 // Global references
 let svgContainers = {}; // Store SVG containers by condition
 let allData; // Store all data globally for filtering
+let currentCondition = null; // Track current condition for global interactions
+let currentProtocol = null; // Track current protocol for global interactions
+let selectedSegment = null; // Track selected segment
 
 // Fixed y-axis range (63 to 140 bpm)
 const fixedYMin = 63;
@@ -17,10 +20,163 @@ const fixedYMax = 140;
 // Animation duration in milliseconds
 const animationDuration = 750;
 
+// Time offsets for each condition and protocol (in seconds)
+const timeOffsets = {
+    "STRESS": {
+      "old": 0,
+      "new": 0
+    },
+    "AEROBIC": {
+      "old": 0,
+      "new": 0
+    },
+    "ANAEROBIC": {
+      "old": 0,
+      "new": 0
+    }
+  };
+
+
+// Timeline offsets for each condition and protocol (in seconds)
+const timelineOffsets = {
+    "STRESS": {
+      "old": 210,
+      "new": 600
+    },
+    "AEROBIC": {
+      "old": 0,
+      "new": 300
+    },
+    "ANAEROBIC": {
+      "old": 0,
+      "new": 700
+    }
+  };
+
+  // Custom y-axis ranges for each condition
+const customYScaleRanges = {
+    "STRESS": { min: 55, max: 100 },
+    "AEROBIC": { min: 60, max: 140 },
+    "ANAEROBIC": { min: 65, max: 130 }
+  };
+
 // Protocol definitions
 const protocols = {
   "old": "Old Protocol",
   "new": "New Protocol"
+};
+
+// Information about each segment type
+const segmentDescriptions = {
+  // Stress protocol segments
+  "Baseline": {
+    description: "Initial resting measurement with minimal external stimuli to establish baseline heart rate.",
+    physiological: "During this phase, heart rate is typically at resting levels (60-100 bpm). The parasympathetic nervous system is dominant, keeping heart rate low."
+  },
+  "Stroop": {
+    description: "The Stroop Test presents color words printed in different colors. Participants must name the color, not read the word.",
+    physiological: "This cognitive task activates the prefrontal cortex and induces mild mental stress, typically causing a slight increase in heart rate due to sympathetic nervous system activation."
+  },
+  "TMCT": {
+    description: "Trier Mental Challenge Test: Mathematical tasks with time pressure and annoying sounds to induce stress.",
+    physiological: "This mentally demanding task activates the sympathetic nervous system, leading to increased heart rate, blood pressure, and cortisol release - similar to a 'fight or flight' response."
+  },
+  "First Rest": {
+    description: "Recovery period after initial stress task, allowing physiological measures to return toward baseline.",
+    physiological: "Heart rate gradually decreases as parasympathetic tone increases. Full recovery may take several minutes depending on stress intensity."
+  },
+  "Second Rest": {
+    description: "Additional recovery period after subsequent stress tasks.",
+    physiological: "Similar to First Rest, but recovery rate may differ due to accumulated stress effects or adaptation."
+  },
+  "Real Opinion": {
+    description: "Participants express their genuine opinions about controversial topics.",
+    physiological: "Speaking about personal views can trigger mild emotional arousal, particularly with controversial topics, leading to slight increases in heart rate."
+  },
+  "Opposite Opinion": {
+    description: "Participants argue against their true beliefs, creating cognitive dissonance.",
+    physiological: "This creates psychological discomfort and mild stress as participants must suppress their actual opinions, often resulting in increased heart rate and skin conductance."
+  },
+  "Subtract Test": {
+    description: "Participants count backward from 1022 in steps of 13, speaking answers aloud.",
+    physiological: "This challenging mental arithmetic task increases cognitive load and performance anxiety, activating the sympathetic nervous system."
+  },
+  
+  // Aerobic protocol segments
+  "Warm up": {
+    description: "Low-intensity cycling to prepare the body for exercise by increasing blood flow to muscles.",
+    physiological: "Heart rate gradually increases as blood flow is redirected to muscles. Body temperature rises slightly, and respiratory rate increases."
+  },
+  "60 rpm": {
+    description: "Cycling at 60 revolutions per minute with low-to-medium resistance.",
+    physiological: "Aerobic energy system is primary, with heart rate increasing to supply oxygen to working muscles. Steady-state metabolism begins to establish."
+  },
+  "70 rpm": {
+    description: "Cycling at 70 revolutions per minute with gradually increasing resistance.",
+    physiological: "Heart rate continues to rise as oxygen demand increases. Still primarily using aerobic metabolism with minimal lactate production."
+  },
+  "75 rpm": {
+    description: "Cycling at 75 revolutions per minute with medium resistance.",
+    physiological: "Heart rate approaches 60-70% of maximum. Oxygen consumption increases proportionally with work rate."
+  },
+  "80 rpm": {
+    description: "Cycling at 80 revolutions per minute with medium-high resistance.",
+    physiological: "Heart rate typically reaches 70-75% of maximum. Aerobic metabolism remains dominant with increased calorie burn."
+  },
+  "85 rpm": {
+    description: "Cycling at 85 revolutions per minute with medium-high resistance.",
+    physiological: "Heart rate approaches 75-80% of maximum. Extended periods at this intensity improve cardiovascular endurance."
+  },
+  "90 rpm": {
+    description: "Cycling at 90 revolutions per minute with high resistance.",
+    physiological: "Heart rate typically reaches 80-85% of maximum. Approaching the upper limits of purely aerobic exercise."
+  },
+  "95 rpm": {
+    description: "Cycling at 95 revolutions per minute with high resistance.",
+    physiological: "Heart rate may reach 85-90% of maximum. Some anaerobic metabolism begins to supplement aerobic energy production."
+  },
+  "90/95 rpm": {
+    description: "Cycling at 90-95 revolutions per minute with high resistance (adapted protocol).",
+    physiological: "Heart rate typically 85-90% of maximum. Near the aerobic-anaerobic threshold where lactate begins to accumulate."
+  },
+  "100 rpm": {
+    description: "Cycling at 100 revolutions per minute with very high resistance.",
+    physiological: "Heart rate approaches 90% of maximum. Anaerobic metabolism increasingly contributes to energy production."
+  },
+  "105 rpm": {
+    description: "Cycling at 105 revolutions per minute with very high resistance.",
+    physiological: "Heart rate may exceed 90% of maximum. Significant anaerobic contribution with increased lactate production."
+  },
+  "110 rpm": {
+    description: "Cycling at 110 revolutions per minute with maximum tolerable resistance.",
+    physiological: "Heart rate approaches maximum (90-95%). Substantial anaerobic metabolism with rapid lactate accumulation."
+  },
+  "Cool Down": {
+    description: "Gradual reduction in exercise intensity to safely return heart rate toward baseline.",
+    physiological: "Heart rate slowly decreases as oxygen demand reduces. Blood is redistributed back to core organs from muscles."
+  },
+  "Rest": {
+    description: "Complete cessation of exercise to allow full recovery.",
+    physiological: "Heart rate returns to near-baseline levels. Body continues to consume oxygen at elevated rates (EPOC - excess post-exercise oxygen consumption)."
+  },
+  
+  // Anaerobic protocol segments
+  "Sprint 1": {
+    description: "Initial maximum effort cycling against high resistance for 30-45 seconds.",
+    physiological: "Heart rate rapidly increases toward maximum. Primary energy comes from ATP-CP system and anaerobic glycolysis, leading to lactate accumulation."
+  },
+  "Sprint 2": {
+    description: "Second maximum effort cycling against high resistance, following recovery period.",
+    physiological: "Heart rate again approaches maximum, but peak may be lower due to fatigue. Continued reliance on anaerobic metabolism with increased lactate."
+  },
+  "Sprint 3": {
+    description: "Third maximum effort cycling against high resistance.",
+    physiological: "Heart rate response may be blunted due to accumulated fatigue. ATP-CP stores significantly depleted, increasing reliance on glycolysis."
+  },
+  "Sprint 4": {
+    description: "Final maximum effort cycling against high resistance (in new protocol only).",
+    physiological: "Heart rate may be lower despite maximal perceived exertion due to fatigue. Significant lactate accumulation limits performance."
+  }
 };
 
 // Protocol segments by condition and version
@@ -101,6 +257,226 @@ const protocolSegments = {
   }
 };
 
+// Comparative differences between old and new protocols
+const protocolComparisons = {
+  "STRESS": [
+    { 
+      feature: "Duration", 
+      old: "19:30 minutes", 
+      new: "27:30 minutes",
+      explanation: "The new protocol is longer, allowing more recovery time between stressors."
+    },
+    { 
+      feature: "Rest Periods", 
+      old: "Two 5-minute rest periods", 
+      new: "Two 10-minute rest periods",
+      explanation: "Longer rest periods in the new protocol allow for more complete recovery between tasks."
+    },
+    { 
+      feature: "Stressors", 
+      old: "Includes Stroop test", 
+      new: "Omits Stroop test",
+      explanation: "The new protocol omits the Stroop test to focus on other stressors."
+    },
+    { 
+      feature: "Task Order", 
+      old: "Opinion tasks before second rest", 
+      new: "Opinion tasks after first rest",
+      explanation: "The new protocol places opinion tasks earlier, when participant is less fatigued."
+    }
+  ],
+  "AEROBIC": [
+    { 
+      feature: "Duration", 
+      old: "35 minutes", 
+      new: "32 minutes",
+      explanation: "The new protocol is slightly shorter but with different intensity distribution."
+    },
+    { 
+      feature: "Baseline", 
+      old: "None", 
+      new: "4:30 minute baseline",
+      explanation: "The new protocol adds a baseline period to establish resting heart rate."
+    },
+    { 
+      feature: "Intensity Profile", 
+      old: "Gradual increases through many steps", 
+      new: "Longer sustained periods at key intensities",
+      explanation: "The new protocol emphasizes longer durations at specific intensities (especially 85 rpm)."
+    },
+    { 
+      feature: "Peak Intensity", 
+      old: "Reaches 110 rpm", 
+      new: "Peaks at 90/95 rpm",
+      explanation: "The new protocol has a lower peak intensity but sustains moderate-high intensity longer."
+    }
+  ],
+  "ANAEROBIC": [
+    { 
+      feature: "Number of Sprints", 
+      old: "3 sprints", 
+      new: "4 sprints",
+      explanation: "The new protocol adds a fourth sprint, further challenging anaerobic capacity."
+    },
+    { 
+      feature: "Sprint Duration", 
+      old: "30 seconds each", 
+      new: "45 seconds each",
+      explanation: "Sprints are 50% longer in the new protocol, increasing anaerobic stress."
+    },
+    { 
+      feature: "Total Duration", 
+      old: "18:30 minutes", 
+      new: "29:30 minutes",
+      explanation: "The new protocol is significantly longer with more anaerobic work."
+    },
+    { 
+      feature: "Baseline", 
+      old: "None", 
+      new: "4:30 minute baseline",
+      explanation: "The new protocol adds a baseline period to establish resting heart rate."
+    }
+  ]
+};
+
+// Function to draw protocol timeline
+function drawTimeline(condition, protocol) {
+    const { timelineGroup, xScale } = svgContainers[condition];
+    
+    // Clear previous timeline
+    timelineGroup.selectAll("*").remove();
+    
+    // Skip if protocol is unknown
+    if (protocol === "unknown") return;
+    
+    // Get protocol segments based on condition and version
+    const segments = protocolSegments[condition][protocol];
+    
+    if (!segments) return;
+    
+    // Get the offset for this condition and protocol
+    const offset = timelineOffsets[condition][protocol] || 0;
+    
+    // Calculate segment positions
+    let currentPosition = 0;
+    const timelineSegments = segments.map(segment => {
+      const start = currentPosition + offset;
+      currentPosition += segment.duration;
+      return {
+        ...segment,
+        start,
+        end: currentPosition + offset,
+        originalStart: currentPosition - segment.duration,
+        originalEnd: currentPosition
+      };
+    });
+    
+    // Draw segment rectangles
+    timelineGroup.selectAll(".segment-rect")
+      .data(timelineSegments)
+      .enter()
+      .append("rect")
+      .attr("class", "segment-rect")
+      .attr("x", d => xScale(d.start))
+      .attr("y", 0)
+      .attr("width", d => Math.max(1, xScale(d.end) - xScale(d.start))) // Ensure at least 1px width
+      .attr("height", timelineHeight / 2)
+      .attr("fill", d => d.color)
+      .attr("stroke", "#333")
+      .attr("stroke-width", 1)
+      .style("cursor", "pointer")
+      .on("click", function(event, d) {
+        // Update selected segment and condition
+        selectedSegment = d;
+        currentCondition = condition;
+        currentProtocol = protocol;
+        
+        // Show segment info
+        showSegmentInfo(condition, protocol, d);
+        
+        // Highlight selected segment
+        d3.select(`#chart-${condition}`)
+          .selectAll(".segment-rect")
+          .style("stroke-width", 1)
+          .style("stroke", "#333");
+        
+        d3.select(this)
+          .style("stroke-width", 3)
+          .style("stroke", "#000");
+      })
+      .on("mouseover", function(event, d) {
+        // Highlight on hover
+        if (d !== selectedSegment) {
+          d3.select(this)
+            .style("stroke-width", 2)
+            .style("stroke", "#555");
+        }
+        
+        // Show tooltip with name and duration
+        const minutes = Math.floor(d.duration / 60);
+        const seconds = d.duration % 60;
+        const durationStr = seconds > 0 ? `${minutes}:${seconds.toString().padStart(2, '0')}` : `${minutes}m`;
+        
+        d3.select("#tooltip")
+          .style("opacity", 1)
+          .style("left", (event.pageX + 10) + "px")
+          .style("top", (event.pageY - 20) + "px")
+          .html(`
+            <div class="tooltip-header">${d.name}</div>
+            <div>Duration: ${durationStr}</div>
+            <div class="tooltip-hint">Click for details</div>
+          `);
+      })
+      .on("mouseout", function(event, d) {
+        // Reset styling on mouseout if not selected
+        if (d !== selectedSegment) {
+          d3.select(this)
+            .style("stroke-width", 1)
+            .style("stroke", "#333");
+        }
+        
+        // Hide tooltip
+        d3.select("#tooltip")
+          .style("opacity", 0);
+      });
+    
+    // Add segment labels
+    timelineGroup.selectAll(".segment-label")
+      .data(timelineSegments)
+      .enter()
+      .append("text")
+      .attr("class", "segment-label")
+      .attr("x", d => xScale(d.start + (d.end - d.start) / 2))
+      .attr("y", timelineHeight / 2 + 15)
+      .attr("text-anchor", "middle")
+      .attr("transform", d => {
+        const segmentWidth = xScale(d.end) - xScale(d.start);
+        const rotation = segmentWidth < 60 ? -45 : 0; // Rotate narrow labels
+        const x = xScale(d.start + (d.end - d.start) / 2);
+        const y = timelineHeight / 2 + 15;
+        return rotation ? `rotate(${rotation},${x},${y})` : null;
+      })
+      .style("font-size", "10px")
+      .style("font-weight", "bold")
+      .text(d => d.name);
+    
+    // Add time markers
+    timelineGroup.selectAll(".time-marker")
+      .data(timelineSegments)
+      .enter()
+      .append("text")
+      .attr("class", "time-marker")
+      .attr("x", d => xScale(d.start + (d.end - d.start) / 2))
+      .attr("y", timelineHeight / 2 + 30)
+      .attr("text-anchor", "middle")
+      .style("font-size", "9px")
+      .text(d => {
+        const minutes = Math.floor(d.duration / 60);
+        const seconds = d.duration % 60;
+        return seconds > 0 ? `${minutes}:${seconds.toString().padStart(2, '0')}` : `${minutes}m`;
+      });
+}
+
 // Function to check if a participant belongs to old or new protocol
 function getProtocol(participant, condition) {
   const id = participant.toLowerCase();
@@ -145,6 +521,190 @@ function calculateProtocolDuration(segments) {
   return segments.reduce((total, segment) => total + segment.duration, 0);
 }
 
+// Function to find a segment containing a specific time point
+function findSegmentAtTime(condition, protocol, time) {
+  if (!condition || !protocol || !protocolSegments[condition] || !protocolSegments[condition][protocol]) {
+    return null;
+  }
+  
+  const offset = timelineOffsets[condition][protocol] || 0;
+
+  const segments = protocolSegments[condition][protocol];
+  let currentTime = 0 + offset;
+  
+  for (const segment of segments) {
+    const endTime = currentTime + segment.duration;
+    if (time >= currentTime && time < endTime) {
+      return {
+        ...segment,
+        startTime: currentTime,
+        endTime: endTime
+      };
+    }
+    currentTime = endTime;
+  }
+  
+  return null;
+}
+
+// Function to show segment information
+function showSegmentInfo(condition, protocol, segment) {
+    const infoPanel = document.getElementById("segment-info-panel");
+    const contentDiv = infoPanel.querySelector(".info-content");
+    
+    // Get detailed description from segmentDescriptions
+    const segmentDetail = segmentDescriptions[segment.name];
+    
+    if (!segmentDetail) {
+      contentDiv.innerHTML = `
+        <h3>${segment.name}</h3>
+        <p>No detailed information available for this segment.</p>
+      `;
+    } else {
+      // Convert duration to minutes and seconds
+      const minutes = Math.floor(segment.duration / 60);
+      const seconds = segment.duration % 60;
+      const durationStr = seconds > 0 ? 
+        `${minutes}:${seconds.toString().padStart(2, '0')}` : 
+        `${minutes} min`;
+      
+      contentDiv.innerHTML = `
+        <h3>${segment.name}</h3>
+        <div class="segment-duration">Duration: ${durationStr}</div>
+        <div class="segment-indicator" style="background-color: ${segment.color};"></div>
+        <div class="segment-description">
+          <h4>Description</h4>
+          <p>${segmentDetail.description}</p>
+          <h4>Physiological Response</h4>
+          <p>${segmentDetail.physiological}</p>
+        </div>
+      `;
+    }
+    
+    infoPanel.style.display = "block";
+  }
+
+// Create info panel for segment details
+function createInfoPanel() {
+  const infoPanel = document.createElement("div");
+  infoPanel.id = "segment-info-panel";
+  infoPanel.className = "info-panel";
+  infoPanel.style.display = "none";
+  
+  document.getElementById("hr1").appendChild(infoPanel);
+  
+  // Add close button
+  const closeButton = document.createElement("button");
+  closeButton.className = "close-button";
+  closeButton.innerHTML = "×";
+  closeButton.addEventListener("click", () => {
+    infoPanel.style.display = "none";
+    // Remove highlight from selected segment if any
+    if (selectedSegment && currentCondition) {
+      d3.select(`#chart-${currentCondition}`)
+        .selectAll(".segment-rect")
+        .style("stroke-width", 1);
+    }
+    selectedSegment = null;
+  });
+  
+  infoPanel.appendChild(closeButton);
+  
+  // Add content container
+  const contentDiv = document.createElement("div");
+  contentDiv.className = "info-content";
+  infoPanel.appendChild(contentDiv);
+  
+  return infoPanel;
+}
+
+// Create protocol comparison panel
+function createComparisonPanel() {
+  const comparisonPanel = document.createElement("div");
+  comparisonPanel.id = "protocol-comparison-panel";
+  comparisonPanel.className = "comparison-panel";
+  comparisonPanel.style.display = "none";
+  
+  document.getElementById("hr1").appendChild(comparisonPanel);
+  
+  // Add close button
+  const closeButton = document.createElement("button");
+  closeButton.className = "close-button";
+  closeButton.innerHTML = "×";
+  closeButton.addEventListener("click", () => {
+    comparisonPanel.style.display = "none";
+  });
+  
+  comparisonPanel.appendChild(closeButton);
+  
+  // Add content container
+  const contentDiv = document.createElement("div");
+  contentDiv.className = "comparison-content";
+  comparisonPanel.appendChild(contentDiv);
+  
+  return comparisonPanel;
+}
+
+// Create legend for physiological zones
+function createPhysiologicalLegend() {
+  const legendContainer = document.createElement("div");
+  legendContainer.id = "physiological-legend";
+  legendContainer.className = "physiological-legend";
+  
+  // Define the zones
+  const zones = [
+    { name: "Rest Zone", range: "60-80 bpm", color: "#A4D16F", description: "Minimal physiological stress. Parasympathetic system dominant." },
+    { name: "Light Activity", range: "81-100 bpm", color: "#F5B850", description: "Slight activation of sympathetic system. Increased cardiac output." },
+    { name: "Moderate Activity", range: "101-120 bpm", color: "#F0914F", description: "Significant sympathetic activation. Increased respiration and metabolism." },
+    { name: "High Intensity", range: "121-140+ bpm", color: "#E55934", description: "Strong sympathetic dominance. Near anaerobic threshold at upper range." }
+  ];
+  
+  const title = document.createElement("h4");
+  title.textContent = "Heart Rate Zones";
+  legendContainer.appendChild(title);
+  
+  zones.forEach(zone => {
+    const zoneElement = document.createElement("div");
+    zoneElement.className = "legend-item";
+    
+    const colorSwatch = document.createElement("div");
+    colorSwatch.className = "color-swatch";
+    colorSwatch.style.backgroundColor = zone.color;
+    
+    const zoneText = document.createElement("div");
+    zoneText.className = "zone-text";
+    zoneText.innerHTML = `<strong>${zone.name}</strong>: ${zone.range}`;
+    
+    zoneElement.appendChild(colorSwatch);
+    zoneElement.appendChild(zoneText);
+    
+    // Make legend items clickable to show descriptions
+    zoneElement.addEventListener("click", () => {
+      showZoneDescription(zone);
+    });
+    
+    legendContainer.appendChild(zoneElement);
+  });
+  
+  document.getElementById("hr1").appendChild(legendContainer);
+  
+  return legendContainer;
+}
+
+// Function to show zone description
+function showZoneDescription(zone) {
+  const infoPanel = document.getElementById("segment-info-panel");
+  const contentDiv = infoPanel.querySelector(".info-content");
+  
+  contentDiv.innerHTML = `
+    <h3>${zone.name} (${zone.range})</h3>
+    <p>${zone.description}</p>
+    <div class="zone-indicator" style="background-color: ${zone.color};"></div>
+  `;
+  
+  infoPanel.style.display = "block";
+}
+
 // Function to create individual chart for each condition
 function createChartForCondition(condition) {
   // Create container for this condition if it doesn't exist
@@ -181,10 +741,24 @@ function createChartForCondition(condition) {
       select.appendChild(option);
     });
     
+    // Add "View Differences" button
+    const diffButton = document.createElement("button");
+    diffButton.className = "view-differences-btn";
+    diffButton.textContent = "View Protocol Differences";
+    diffButton.addEventListener("click", () => {
+      showProtocolComparison(condition);
+    });
+    controlDiv.appendChild(diffButton);
+    
     select.value = "old"; // Default to old protocol
     select.addEventListener("change", function() {
+      // Update current protocol tracking
+      currentProtocol = this.value;
+      currentCondition = condition;
+      
       updateChart(allData, condition, this.value);
     });
+    
   }
   
   // Create SVG
@@ -201,15 +775,23 @@ function createChartForCondition(condition) {
   // Create group for timeline
   const timelineGroup = svg.append("g")
     .attr("class", "timeline-group")
-    .attr("transform", `translate(${margin.left}, ${margin.top + height + 30})`);
+    .attr("transform", `translate(${margin.left}, ${margin.top + height + 40})`);
+  
+  // Create group for annotations
+  const annotationsGroup = svg.append("g")
+    .attr("class", "annotations-group")
+    .attr("transform", `translate(${margin.left}, ${margin.top})`);
   
   // Create scales
   const xScale = d3.scaleLinear()
     .range([0, width]);
-  
+
   const yScale = d3.scaleLinear()
-    .domain([fixedYMin, fixedYMax])
-    .range([height, 0]);
+    .domain([
+      customYScaleRanges[condition] ? customYScaleRanges[condition].min : fixedYMin,
+      customYScaleRanges[condition] ? customYScaleRanges[condition].max : fixedYMax
+    ])
+.range([height, 0]);
   
   // Create line generator
   const lineGenerator = d3.line()
@@ -233,32 +815,59 @@ function createChartForCondition(condition) {
     .attr("class", "grid");
   
   // Axis labels
-  chartGroup.append("text")
+    // Axis labels
+    chartGroup.append("text")
     .attr("class", "axis-label")
     .attr("transform", `translate(${width / 2}, ${height + 30})`)
     .style("text-anchor", "middle")
     .text("Time (s)");
-  
-  chartGroup.append("text")
+
+    chartGroup.append("text")
     .attr("class", "axis-label")
     .attr("transform", "rotate(-90)")
     .attr("y", -margin.left + 15)
     .attr("x", -height / 2)
     .style("text-anchor", "middle")
     .text("Average HR (bpm)");
-  
-  // Create path for the line
-  chartGroup.append("path")
+
+    // Create path for the line
+    chartGroup.append("path")
     .attr("class", "red-line")
     .attr("fill", "none")
     .attr("stroke", "#ff6666")
     .attr("stroke-width", 2);
-  
-  // Store references to SVG elements
-  svgContainers[condition] = {
+
+    // Add physiological zone bands
+    const minY = customYScaleRanges[condition] ? customYScaleRanges[condition].min : fixedYMin;
+    const maxY = customYScaleRanges[condition] ? customYScaleRanges[condition].max : fixedYMax;
+
+    const physiologicalZones = [
+      { min: minY, max: Math.min(80, maxY), color: "#A4D16F", opacity: 0.1 },       // Rest zone
+      { min: Math.max(80, minY), max: Math.min(100, maxY), color: "#F5B850", opacity: 0.1 },  // Light activity
+      { min: Math.max(100, minY), max: Math.min(120, maxY), color: "#F0914F", opacity: 0.1 }, // Moderate activity
+      { min: Math.max(120, minY), max: maxY, color: "#E55934", opacity: 0.1 }       // High intensity
+    ];
+
+// Only add zones that fall within our y-axis range
+  physiologicalZones.forEach(zone => {
+    if (zone.max > zone.min) {
+      chartGroup.append("rect")
+        .attr("class", "physiological-zone")
+        .attr("x", 0)
+        .attr("y", yScale(zone.max))
+        .attr("width", width)
+        .attr("height", yScale(zone.min) - yScale(zone.max))
+        .attr("fill", zone.color)
+        .attr("opacity", zone.opacity);
+    }
+  });
+
+    // Store references to SVG elements
+    svgContainers[condition] = {
     svg,
     chartGroup,
     timelineGroup,
+    annotationsGroup,
     xScale,
     yScale,
     xAxisGroup,
@@ -266,85 +875,283 @@ function createChartForCondition(condition) {
     xGridGroup,
     yGridGroup,
     lineGenerator
-  };
+    };
 }
 
-// Function to draw protocol timeline
-function drawTimeline(condition, protocol) {
-  const { timelineGroup, xScale } = svgContainers[condition];
+// Function to detect and add annotations for interesting features
+function addFeatureAnnotations(condition, protocol, avgData) {
+  const { annotationsGroup, xScale, yScale } = svgContainers[condition];
   
-  // Clear previous timeline
-  timelineGroup.selectAll("*").remove();
+  // Clear existing annotations
+  annotationsGroup.selectAll("*").remove();
   
-  // Skip if protocol is unknown
-  if (protocol === "unknown") return;
+  // Skip if no data
+  if (!avgData || avgData.length === 0) return;
   
-  // Get protocol segments based on condition and version
-  const segments = protocolSegments[condition][protocol];
+  // Find interesting features
+  const features = detectInterestingFeatures(condition, protocol, avgData);
   
-  if (!segments) return;
-  
-  // Calculate segment positions
-  let currentPosition = 0;
-  const timelineSegments = segments.map(segment => {
-    const start = currentPosition;
-    currentPosition += segment.duration;
-    return {
-      ...segment,
-      start,
-      end: currentPosition
-    };
+  // Add annotations for each feature
+  features.forEach((feature, i) => {
+    // Create annotation group
+    const annotationGroup = annotationsGroup.append("g")
+      .attr("class", "annotation")
+      .attr("transform", `translate(${xScale(feature.time)}, ${yScale(feature.HR)})`);
+    
+    // Add circle marker
+    annotationGroup.append("circle")
+      .attr("r", 5)
+      .attr("fill", "white")
+      .attr("stroke", feature.color)
+      .attr("stroke-width", 2);
+    
+    // Add connecting line
+    const lineDirection = i % 2 === 0 ? -1 : 1; // Alternate direction
+    annotationGroup.append("line")
+      .attr("x1", 0)
+      .attr("y1", 0)
+      .attr("x2", lineDirection * 50)
+      .attr("y2", -20)
+      .attr("stroke", feature.color)
+      .attr("stroke-width", 1)
+      .attr("stroke-dasharray", "3,3");
+    
+    // Add text label
+    annotationGroup.append("text")
+      .attr("x", lineDirection * 50 + (lineDirection > 0 ? 5 : -5))
+      .attr("y", -20)
+      .attr("text-anchor", lineDirection > 0 ? "start" : "end")
+      .attr("alignment-baseline", "middle")
+      .attr("fill", feature.color)
+      .style("font-size", "10px")
+      .style("font-weight", "bold")
+      .text(feature.label);
+    
+    // Make the annotation interactive
+    annotationGroup
+      .style("cursor", "pointer")
+      .on("click", () => showFeatureDescription(feature))
+      .on("mouseover", function() {
+        d3.select(this).select("circle")
+          .transition()
+          .duration(200)
+          .attr("r", 7);
+      })
+      .on("mouseout", function() {
+        d3.select(this).select("circle")
+          .transition()
+          .duration(200)
+          .attr("r", 5);
+      });
   });
+}
+
+// Function to detect interesting features in the data
+function detectInterestingFeatures(condition, protocol, data) {
+  const features = [];
   
-  // Draw segment rectangles
-  timelineGroup.selectAll(".segment-rect")
-    .data(timelineSegments)
-    .enter()
-    .append("rect")
-    .attr("class", "segment-rect")
-    .attr("x", d => xScale(d.start))
-    .attr("y", 0)
-    .attr("width", d => Math.max(1, xScale(d.end) - xScale(d.start))) // Ensure at least 1px width
-    .attr("height", timelineHeight / 2)
-    .attr("fill", d => d.color)
-    .attr("stroke", "#333")
-    .attr("stroke-width", 1);
+  // Skip if insufficient data
+  if (data.length < 10) return features;
   
-  // Add segment labels
-  timelineGroup.selectAll(".segment-label")
-    .data(timelineSegments)
-    .enter()
-    .append("text")
-    .attr("class", "segment-label")
-    .attr("x", d => xScale(d.start + (d.end - d.start) / 2))
-    .attr("y", timelineHeight / 2 + 15)
-    .attr("text-anchor", "middle")
-    .attr("transform", d => {
-      const segmentWidth = xScale(d.end) - xScale(d.start);
-      const rotation = segmentWidth < 60 ? -45 : 0; // Rotate narrow labels
-      const x = xScale(d.start + (d.end - d.start) / 2);
-      const y = timelineHeight / 2 + 15;
-      return rotation ? `rotate(${rotation},${x},${y})` : null;
-    })
-    .style("font-size", "10px")
-    .style("font-weight", "bold")
-    .text(d => d.name);
+  // Smooth the data to reduce noise
+  const smoothedData = smoothData(data, 5);
   
-  // Add time markers
-  timelineGroup.selectAll(".time-marker")
-    .data(timelineSegments)
-    .enter()
-    .append("text")
-    .attr("class", "time-marker")
-    .attr("x", d => xScale(d.start + (d.end - d.start) / 2))
-    .attr("y", timelineHeight / 2 + 30)
-    .attr("text-anchor", "middle")
-    .style("font-size", "9px")
-    .text(d => {
-      const minutes = Math.floor(d.duration / 60);
-      const seconds = d.duration % 60;
-      return seconds > 0 ? `${minutes}:${seconds.toString().padStart(2, '0')}` : `${minutes}m`;
+  // 1. Find the highest heart rate
+  const maxHR = d3.max(smoothedData, d => d.HR);
+  const maxPoint = smoothedData.find(d => d.HR === maxHR);
+  if (maxPoint) {
+    features.push({
+      time: maxPoint.time,
+      HR: maxPoint.HR,
+      label: "Peak HR",
+      description: "This represents the maximum heart rate recorded during the protocol. Higher heart rates indicate increased cardiovascular demand and sympathetic nervous system activity.",
+      color: "#E55934"  // Red-orange
     });
+  }
+  
+  // 2. Find significant rapid increases (more than 15 bpm in 60 seconds)
+  for (let i = 60; i < smoothedData.length; i++) {
+    const change = smoothedData[i].HR - smoothedData[i-60].HR;
+    if (change > 15) {
+      // Check if this is a local maximum of increases
+      let isLocalMax = true;
+      for (let j = Math.max(0, i-30); j < Math.min(smoothedData.length, i+30); j++) {
+        if (j !== i && smoothedData[j].HR - smoothedData[Math.max(0, j-60)].HR > change) {
+          isLocalMax = false;
+          break;
+        }
+      }
+      
+      if (isLocalMax) {
+        features.push({
+          time: smoothedData[i].time,
+          HR: smoothedData[i].HR,
+          label: "Rapid Increase",
+          description: "This point shows a significant increase in heart rate (+15 bpm in 60 seconds), indicating a sympathetic nervous system response to either physical or mental stress.",
+          color: "#F0914F"  // Orange
+        });
+        i += 120; // Skip ahead to avoid detecting multiple points in same increase
+      }
+    }
+  }
+  
+  // 3. Find steady-state periods (heart rate variation < 5 bpm for 2+ minutes)
+  for (let i = 120; i < smoothedData.length - 120; i += 60) {
+    const segment = smoothedData.slice(i, i + 120);
+    const range = d3.max(segment, d => d.HR) - d3.min(segment, d => d.HR);
+    
+    if (range < 5 && segment[0].HR > 90) {  // Only interesting if HR is elevated
+      features.push({
+        time: smoothedData[i + 60].time,  // Middle of the steady period
+        HR: smoothedData[i + 60].HR,
+        label: "Steady State",
+        description: "This region shows a steady heart rate over an extended period, indicating cardiovascular equilibrium where oxygen delivery matches demand. This is characteristic of sustainable aerobic exercise.",
+        color: "#4682B4"  // Steel blue
+      });
+      i += 180; // Skip ahead
+    }
+  }
+  
+  // 4. Find rapid recovery periods (decrease of 15+ bpm in 2 minutes)
+  for (let i = 120; i < smoothedData.length; i++) {
+    const change = smoothedData[i-120].HR - smoothedData[i].HR;
+    if (change > 15) {
+      // Check if this is a local maximum of decreases
+      let isLocalMax = true;
+      for (let j = Math.max(120, i-30); j < Math.min(smoothedData.length, i+30); j++) {
+        if (j !== i && smoothedData[j-120].HR - smoothedData[j].HR > change) {
+          isLocalMax = false;
+          break;
+        }
+      }
+      
+      if (isLocalMax) {
+        features.push({
+          time: smoothedData[i].time,
+          HR: smoothedData[i].HR,
+          label: "Recovery",
+          description: "This shows a significant decrease in heart rate during recovery, indicating parasympathetic reactivation. The rate of recovery is an important indicator of cardiovascular fitness.",
+          color: "#87CEEB"  // Sky blue
+        });
+        i += 120; // Skip ahead
+      }
+    }
+  }
+  
+  // 5. Find condition-specific features
+  if (condition === "ANAEROBIC") {
+    // Look for repeated sprint patterns (rapid increase followed by recovery)
+    let lastPeak = -1;
+    for (let i = 1; i < smoothedData.length - 1; i++) {
+      // Find local peaks
+      if (smoothedData[i].HR > smoothedData[i-1].HR && 
+          smoothedData[i].HR > smoothedData[i+1].HR && 
+          smoothedData[i].HR > 110) {
+        
+        // If we've found a previous peak and this one is separated by reasonable time
+        if (lastPeak > 0 && smoothedData[i].time - smoothedData[lastPeak].time > 200) {
+          features.push({
+            time: smoothedData[i].time,
+            HR: smoothedData[i].HR,
+            label: "Sprint Peak",
+            description: "This heart rate peak corresponds to the end of a maximum effort sprint, when anaerobic metabolism has been pushed to its limit. The repeated pattern of peaks and recoveries is characteristic of anaerobic interval training.",
+            color: "#9370DB"  // Medium purple
+          });
+        }
+        
+        lastPeak = i;
+      }
+    }
+  } else if (condition === "AEROBIC") {
+    // Look for aerobic threshold crossing (around 70% of max HR, ~120-130 bpm)
+    for (let i = 60; i < smoothedData.length - 60; i++) {
+      if (smoothedData[i-60].HR < 120 && smoothedData[i].HR >= 120 && smoothedData[i+60].HR >= 120) {
+        features.push({
+          time: smoothedData[i].time,
+          HR: smoothedData[i].HR,
+          label: "Aerobic Threshold",
+          description: "This point marks the crossing of the aerobic threshold, when exercise intensity has increased enough that aerobic metabolism becomes the dominant energy source. This is an important training zone for cardiovascular fitness.",
+          color: "#20B2AA"  // Light sea green
+        });
+        break; // Only add one threshold crossing
+      }
+    }
+  } else if (condition === "STRESS") {
+    // Look for stress reactions (small but significant increases during mental tasks)
+    const segments = protocolSegments[condition][protocol];
+    if (segments) {
+      let currentTime = 0;
+      for (const segment of segments) {
+        const startTime = currentTime;
+        const endTime = startTime + segment.duration;
+        
+        // Only check mental stressor segments
+        if (["TMCT", "Stroop", "Subtract Test", "Real Opinion", "Opposite Opinion"].includes(segment.name)) {
+          // Find data points in this segment
+          const segmentData = smoothedData.filter(d => d.time >= startTime && d.time < endTime);
+          
+          if (segmentData.length > 0) {
+            // Get the maximum point in this segment
+            const maxSegmentHR = d3.max(segmentData, d => d.HR);
+            const maxSegmentPoint = segmentData.find(d => d.HR === maxSegmentHR);
+            
+            if (maxSegmentPoint && maxSegmentPoint.HR > 80) { // Only if there's a noticeable response
+              features.push({
+                time: maxSegmentPoint.time,
+                HR: maxSegmentPoint.HR,
+                label: "Stress Response",
+                description: `This peak shows the cardiovascular response to the ${segment.name} mental stressor. Even without physical exertion, psychological stress activates the sympathetic nervous system, increasing heart rate.`,
+                color: "#FF69B4"  // Hot pink
+              });
+            }
+          }
+        }
+        
+        currentTime = endTime;
+      }
+    }
+  }
+  
+  // Limit to maximum 4 features to avoid cluttering
+  return features.slice(0, 4);
+}
+
+// Function to smooth data using simple moving average
+function smoothData(data, windowSize) {
+  const result = [];
+  for (let i = 0; i < data.length; i++) {
+    let sum = 0;
+    let count = 0;
+    
+    for (let j = Math.max(0, i - windowSize); j <= Math.min(data.length - 1, i + windowSize); j++) {
+      sum += data[j].HR;
+      count++;
+    }
+    
+    result.push({
+      time: data[i].time,
+      HR: sum / count
+    });
+  }
+  return result;
+}
+
+// Function to show feature description
+function showFeatureDescription(feature) {
+  const infoPanel = document.getElementById("segment-info-panel");
+  const contentDiv = infoPanel.querySelector(".info-content");
+  
+  contentDiv.innerHTML = `
+    <h3>${feature.label}</h3>
+    <div class="feature-hr">Heart Rate: ${feature.HR.toFixed(1)} bpm</div>
+    <div class="feature-time">Time: ${Math.floor(feature.time / 60)}:${(feature.time % 60).toString().padStart(2, '0')}</div>
+    <div class="feature-indicator" style="background-color: ${feature.color};"></div>
+    <div class="feature-description">
+      <p>${feature.description}</p>
+    </div>
+  `;
+  
+  infoPanel.style.display = "block";
 }
 
 function updateChart(allData, condition, protocol) {
@@ -360,17 +1167,26 @@ function updateChart(allData, condition, protocol) {
     return;
   }
   
+  // Clear any existing comparison
+  const chartGroup = svgContainers[condition].chartGroup;
+  chartGroup.select(".blue-line").remove();
+  chartGroup.select(".chart-legend").remove();
+  
+  // Update current tracking variables
+  currentCondition = condition;
+  currentProtocol = protocol;
+  
   // Get references for this condition
   const {
     svg,
-    chartGroup,
     xScale,
     yScale,
     xAxisGroup,
     yAxisGroup,
     xGridGroup,
     yGridGroup,
-    lineGenerator
+    lineGenerator,
+    annotationsGroup
   } = svgContainers[condition];
   
   // Filter data by condition and protocol
@@ -408,6 +1224,13 @@ function updateChart(allData, condition, protocol) {
   let avgData = Array.from(roll, ([time, HR]) => ({ time, HR }));
   avgData.sort((a, b) => a.time - b.time);
   
+  const offset = timeOffsets[condition][protocol] || 0;
+  const offsetData = avgData.map(d => ({
+    time: d.time - offset,
+    HR: d.HR,
+    originalTime: d.time // Keep original time for reference
+  }));
+
   // Determine x-axis domain based on data and protocol segments
   const maxDataTime = d3.max(avgData, d => d.time);
   
@@ -462,11 +1285,14 @@ function updateChart(allData, condition, protocol) {
   
   // Select the line and update it with transition
   chartGroup.select(".red-line")
-    .datum(avgData)
+    .datum(offsetData)
     .transition()
     .duration(animationDuration)
     .attr("d", lineGenerator)
     .style("opacity", 1);
+
+  // Add feature annotations with offset data
+  addFeatureAnnotations(condition, protocol, offsetData);
   
   // Tooltip
   const tooltip = d3.select("#tooltip");
@@ -508,19 +1334,19 @@ function updateChart(allData, condition, protocol) {
     
     // Handle edge cases
     if (idx <= 0) {
-      showTooltip(avgData[0]);
+      showTooltip(avgData[0], xVal);
     } else if (idx >= avgData.length) {
-      showTooltip(avgData[avgData.length - 1]);
+      showTooltip(avgData[avgData.length - 1], xVal);
     } else {
       const d0 = avgData[idx - 1];
       const d1 = avgData[idx];
       
       // Find the closest point
       const dClosest = (xVal - d0.time) < (d1.time - xVal) ? d0 : d1;
-      showTooltip(dClosest);
+      showTooltip(dClosest, xVal);
     }
     
-    function showTooltip(dataPoint) {
+    function showTooltip(dataPoint, currentTime) {
       // Show circle
       hoverCircle
         .style("opacity", 1)
@@ -533,32 +1359,41 @@ function updateChart(allData, condition, protocol) {
       const timeStr = `${minutes}:${seconds.toString().padStart(2, '0')}`;
       
       // Find which protocol segment this time belongs to
-      let segmentInfo = "";
+      let currentSegment = null;
       if (protocol !== "unknown") {
-        const segments = protocolSegments[condition][protocol];
-        
-        if (segments) {
-          let currentTime = 0;
-          for (const segment of segments) {
-            const endTime = currentTime + segment.duration;
-            if (dataPoint.time >= currentTime && dataPoint.time < endTime) {
-              segmentInfo = `<br/><strong>Segment:</strong> ${segment.name}`;
-              break;
-            }
-            currentTime = endTime;
-          }
-        }
+        currentSegment = findSegmentAtTime(condition, protocol, currentTime);
       }
+      
+      // Get heart rate zone
+      const hrZone = getHeartRateZone(dataPoint.HR);
+      
+      // Build enhanced tooltip content
+      let tooltipContent = `
+        <div class="tooltip-header">${currentSegment ? currentSegment.name : "Unknown Phase"}</div>
+        <div class="tooltip-hr">Heart Rate: <b>${dataPoint.HR.toFixed(1)} bpm</b></div>
+        <div class="tooltip-time">Time: ${timeStr}</div>
+        <div class="tooltip-zone">Zone: <span style="color:${hrZone.color}">${hrZone.name}</span></div>
+      `;
       
       // Update tooltip position to follow mouse
       tooltip
         .style("opacity", 1)
         .style("left", (event.pageX + 10) + "px")
         .style("top", (event.pageY - 20) + "px")
-        .html(`
-          <strong>Time:</strong> ${timeStr} (min:sec)<br/>
-          <strong>Avg HR:</strong> ${dataPoint.HR.toFixed(1)} bpm${segmentInfo}
-        `);
+        .html(tooltipContent);
+    }
+    
+    // Get heart rate zone based on heart rate value
+    function getHeartRateZone(hr) {
+      if (hr < 80) {
+        return { name: "Rest Zone", color: "#A4D16F" };
+      } else if (hr < 100) {
+        return { name: "Light Activity", color: "#F5B850" };
+      } else if (hr < 120) {
+        return { name: "Moderate Activity", color: "#F0914F" };
+      } else {
+        return { name: "High Intensity", color: "#E55934" };
+      }
     }
   }
   
@@ -573,7 +1408,27 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("chart").innerHTML = "";
   
   // Hide the global controls as we'll have individual controls per chart
-  document.getElementById("controls").style.display = "none";
+  if (document.getElementById("controls")) {
+    document.getElementById("controls").style.display = "none";
+  }
+  
+  // Create info panel for segment details
+  createInfoPanel();
+  
+  // Create protocol comparison panel
+  createComparisonPanel();
+  
+  // Create physiological legend
+  createPhysiologicalLegend();
+  
+  // Create tooltip div if it doesn't exist
+  if (!document.getElementById("tooltip")) {
+    const tooltipDiv = document.createElement("div");
+    tooltipDiv.id = "tooltip";
+    tooltipDiv.className = "tooltip";
+    tooltipDiv.style.opacity = 0;
+    document.body.appendChild(tooltipDiv);
+  }
   
   // Load CSV
   d3.csv("data/combined_HR_data.csv")
@@ -608,6 +1463,9 @@ document.addEventListener("DOMContentLoaded", () => {
           updateChart(allData, condition, "old");
         }, 100); // Add small delay between chart updates
       });
+      
+      // Add a brief introduction section
+      addIntroductionSection();
     })
     .catch(error => {
       console.error("Error loading data:", error);
@@ -618,3 +1476,93 @@ document.addEventListener("DOMContentLoaded", () => {
         .text("Error loading data. Please check the console for details.");
     });
 });
+
+// Function to add introduction section
+function addIntroductionSection() {
+  const introDiv = document.createElement("div");
+  introDiv.className = "introduction";
+  introDiv.innerHTML = `
+    <h2>Heart Rate Responses to Stress and Exercise</h2>
+    <p>This interactive visualization shows heart rate responses during structured protocols for stress induction, aerobic exercise, and anaerobic exercise.
+    Protocols for each visual is placed approximately where testing began. Because data is averaged for all participants, scales will not line up directly.</p>
+    <p>Explore the visualization by:</p>
+    <ul>
+      <li><strong>Hovering</strong> over the chart to see detailed heart rate data and physiological context</li>
+      <li><strong>Clicking</strong> on timeline segments to learn about each protocol phase</li>
+      <li><strong>Examining</strong> the annotated features that highlight key physiological responses</li>
+    </ul>
+  `;
+  
+  // Add before the chart
+  const chartElement = document.getElementById("chart");
+  if (chartElement && chartElement.parentNode) {
+    chartElement.parentNode.insertBefore(introDiv, chartElement);
+  } else {
+    // Fallback - just append to the container
+    const container = document.getElementById("hr1");
+    if (container) {
+      container.prepend(introDiv);
+    }
+  }
+}
+
+// Function to show protocol comparison
+function showProtocolComparison(condition) {
+  const comparisonPanel = document.getElementById("protocol-comparison-panel");
+  const contentDiv = comparisonPanel.querySelector(".comparison-content");
+  
+  // Get comparison data for this condition
+  const comparisons = protocolComparisons[condition];
+  
+  if (!comparisons) {
+    contentDiv.innerHTML = "<p>No comparison data available for this condition.</p>";
+    comparisonPanel.style.display = "block";
+    return;
+  }
+  
+  // Create comparison content
+  let comparisonHTML = `
+    <h3>${condition.charAt(0).toUpperCase() + condition.slice(1).toLowerCase()} Protocol Comparison</h3>
+    <p>Key differences between the original and new protocols:</p>
+    <table class="comparison-table">
+      <thead>
+        <tr>
+          <th>Feature</th>
+          <th>Old Protocol</th>
+          <th>New Protocol</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+  
+  comparisons.forEach(item => {
+    comparisonHTML += `
+      <tr>
+        <td>${item.feature}</td>
+        <td>${item.old}</td>
+        <td>${item.new}</td>
+      </tr>
+    `;
+  });
+  
+  comparisonHTML += `
+      </tbody>
+    </table>
+    <div class="comparison-explanation">
+      <h4>Impact on Physiological Response:</h4>
+      <ul>
+  `;
+  
+  comparisons.forEach(item => {
+    comparisonHTML += `<li><strong>${item.feature}:</strong> ${item.explanation}</li>`;
+  });
+  
+  comparisonHTML += `
+      </ul>
+    </div>
+  `;
+  
+  contentDiv.innerHTML = comparisonHTML;
+  comparisonPanel.style.display = "block";
+}
+
