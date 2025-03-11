@@ -27,7 +27,7 @@
     transition: all 0.3s ease;
 }
 
-.tooltip {
+.tooltip-temp {
     position: absolute;
     background-color: rgba(0, 0, 0, 0.7);
     color: white;
@@ -41,16 +41,6 @@
 
 .tooltip span {
     font-weight: bold;
-}
-
-.tooltip {
-    position: absolute;
-    background-color: rgba(0, 0, 0, 0.8);
-    color: #fff;
-    padding: 8px;
-    border-radius: 4px;
-    font-size: 12px;
-    pointer-events: none; /* Ensure the tooltip doesn't interfere with mouse events */
 }
 
 .tooltip-header {

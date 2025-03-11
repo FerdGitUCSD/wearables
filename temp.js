@@ -96,14 +96,15 @@ d3.csv('data/combined_temperature_data2.csv').then(function(data) {
 
     // Tooltip for temperature info
     const tooltip = d3.select("body").append("div")
-        .attr("class", "tooltip")
-        .style("opacity", 0)
-        .style("position", "absolute")
-        .style("background-color", "rgba(0,0,0,0.7)")
-        .style("color", "#fff")
-        .style("padding", "5px")
-        .style("border-radius", "5px")
-        .style("pointer-events", "none"); // Ensures tooltip won't interfere with mouse events
+    .attr("class", "tooltip-temp")
+    .style("opacity", 0)
+    .style("position", "absolute")
+    .style("background-color", "rgba(0,0,0,0.7)")
+    .style("color", "#fff")
+    .style("padding", "5px")
+    .style("border-radius", "5px")
+    .style("pointer-events", "none");  // Ensure tooltip doesn't block other events
+
 
     // Line generator
     const line = d3.line()
@@ -125,57 +126,6 @@ d3.csv('data/combined_temperature_data2.csv').then(function(data) {
     const phaseColorScale = d3.scaleOrdinal()
         .domain(['Baseline', 'Warm up', 'Sprint 1', 'Cool Down', 'Sprint 2', 'Sprint 3', 'Sprint 4', 'Rest', 'TMCT', 'First Rest', 'Real Opinion', 'Opposite Opinion', 'Second Rest', 'Subtract Test'])
         .range(customColors);  // Use custom colors here
-
-    // Function to add phase shadows for a single session
-    // function addPhaseShadows(session) {
-    //     const sessionPhases = phases[session];
-    //     if (sessionPhases) {
-    //         sessionPhases.forEach(phase => {
-    //             // Add the phase shadow rectangle
-    //             const phaseRect = svg.append('rect')
-    //                 .attr('x', x(phase.start))  // Set initial x based on phase start
-    //                 .attr('y', 0)
-    //                 .attr('width', x(phase.end) - x(phase.start))  // Set initial width
-    //                 .attr('height', height)
-    //                 .attr('fill', phaseColorScale(phase.label))  // Set phase color from the scale
-    //                 .attr('opacity', 0.1)  // Set initial opacity
-    //                 .transition().duration(200)
-    //                 .attr('class', 'phase-shadow')
-    //                 .style('pointer-events', 'none');  // Ensure shadows don't block mouse events
-
-    //             // Add a transparent overlay for tooltips
-    //             svg.append('rect')
-    //                 .attr('x', x(phase.start))  // Same position as the shadow
-    //                 .attr('y', 0)
-    //                 .attr('width', x(phase.end) - x(phase.start))  // Same width as the shadow
-    //                 .attr('height', height)
-    //                 .attr('fill', 'transparent')  // Transparent fill
-    //                 .attr('class', 'phase-tooltip-overlay')
-    //                 .style('pointer-events', 'all')  // Allow mouse events for tooltips
-    //                 .on('mouseover', function(event) {
-    //                     // Show the custom tooltip
-    //                     tooltip.transition()
-    //                         .duration(200)
-    //                         .style('opacity', 0.9);
-
-    //                     // Set the tooltip content
-    //                     tooltip.html(`Phase: ${phase.label}<br>Start: ${phase.start}s<br>End: ${phase.end}s`)
-    //                         .style('left', (event.pageX + 5) + 'px')
-    //                         .style('top', (event.pageY - 28) + 'px');
-    //                 })
-    //                 .on('mouseout', function() {
-    //                     // Hide the custom tooltip
-    //                     tooltip.transition()
-    //                         .duration(200)
-    //                         .style('opacity', 0);
-    //                 });
-    //         });
-    //     }
-    //         // Add the brush layer AFTER the shadows and tooltip overlays
-    //     svg.append("g")
-    //     .attr("class", "brush")
-    //     .call(brush);
-    // }
 
     function addPhaseShadows(session) {
         const sessionPhases = phases[session];
@@ -202,21 +152,23 @@ d3.csv('data/combined_temperature_data2.csv').then(function(data) {
                     .attr('class', 'phase-tooltip-overlay')
                     .style('pointer-events', 'all')
                     .on('mouseover', function(event) {
-                        // Show the custom tooltip
-                        tooltip.transition()
-                            .duration(200)
-                            .style('opacity', 0.9);
+                        // Only show tooltip when exactly one session is selected
+                        if (selectedSessions.length === 1) {
+                            tooltip.transition()
+                                .duration(200)
+                                .style('opacity', 0.9);
     
-                        // Set the tooltip content with detailed description
-                        const phaseDescription = getPhaseDescription(phase.label);
-                        tooltip.html(`
-                            <strong>Phase:</strong> ${phase.label}<br>
-                            <strong>Start:</strong> ${phase.start}s<br>
-                            <strong>End:</strong> ${phase.end}s<br>
-                            <strong>Description:</strong> ${phaseDescription}
-                        `)
-                            .style('left', (event.pageX + 5) + 'px')
-                            .style('top', (event.pageY - 28) + 'px');
+                            // Set the tooltip content with detailed description
+                            const phaseDescription = getPhaseDescription(phase.label);
+                            tooltip.html(`
+                                <strong>Phase:</strong> ${phase.label}<br>
+                                <strong>Start:</strong> ${phase.start}s<br>
+                                <strong>End:</strong> ${phase.end}s<br>
+                                <strong>Description:</strong> ${phaseDescription}
+                            `)
+                                .style('left', (event.pageX + 5) + 'px')
+                                .style('top', (event.pageY - 28) + 'px');
+                        }
                     })
                     .on('mouseout', function() {
                         // Hide the custom tooltip
@@ -234,6 +186,9 @@ d3.csv('data/combined_temperature_data2.csv').then(function(data) {
             'Baseline': 'Initial resting state before the session begins.',
             'Warm up': 'Gradual increase in activity to prepare the body.',
             'Sprint 1': 'Short burst of high-intensity activity.',
+            'Sprint 2': 'Second burst of high-intensity activity.',
+            'Sprint 3': 'Third burst of high-intensity activity.',
+            'Sprint 4': 'Final burst of high-intensity activity.',
             'Cool Down': 'Gradual decrease in activity to return to resting state.',
             'Rest': 'Period of inactivity for recovery.',
             'TMCT': 'Task-specific mental challenge test.',
@@ -241,7 +196,11 @@ d3.csv('data/combined_temperature_data2.csv').then(function(data) {
             'Real Opinion': 'Participants express their genuine opinions.',
             'Opposite Opinion': 'Participants argue against their genuine opinions.',
             'Second Rest': 'Rest period after the opinion tasks.',
-            'Subtract Test': 'Mental arithmetic task to induce stress.'
+            'Subtract Test': 'Mental arithmetic task to induce stress.',
+            '75 rpm': 'Cycling at 75 revolutions per minute.',
+            '80 rpm': 'Cycling at 80 revolutions per minute.',
+            '85 rpm': 'Cycling at 85 revolutions per minute.',
+            '90/95 rpm': 'Cycling at 90 or 95 revolutions per minute.'
         };
         return descriptions[phaseLabel] || 'No description available.';
     }
