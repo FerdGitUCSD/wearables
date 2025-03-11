@@ -325,3 +325,17 @@
   transition: opacity 0.2s;
 }
 
+/* Center-aligned bullet list */
+.explore {
+  text-align: center;
+}
+
+ul.explore {
+  text-align: center;
+}
+
+/* Alternative approach if the above doesn't achieve desired result */
+ul.explore {
+  list-style-position: inside;
+  padding-left: 0;
+}
