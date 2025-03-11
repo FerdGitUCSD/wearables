@@ -1522,10 +1522,10 @@ function addIntroductionSection() {
     <h2>Heart Rate Responses to Stress and Exercise</h2>
     <p>This interactive visualization shows heart rate responses during structured protocols for stress induction, aerobic exercise, and anaerobic exercise.
     Protocols for each visual is placed approximately where testing began. Because data is averaged for all participants, scales will not line up directly.</p>
-    <p>Explore the visualization by:</p>
-    <ul>
+    <p class="explore">Explore the visualization by:</p>
+    <ul class="explore">
       <li><strong>Hovering</strong> over the chart to see detailed heart rate data and physiological context</li>
-      <li><strong>Clicking</strong> on timeline segments to learn about each protocol phase</li>
+      <li><strong>Clicking</strong> on timeline segments to learn more details about each protocol phase</li>
       <li><strong>Examining</strong> the annotated features that highlight key physiological responses</li>
     </ul>
   `;
