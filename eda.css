@@ -159,3 +159,40 @@ svg {
 .eda-stat-value {
     font-weight: 600;
 }
+
+
+.card {
+    border-left: 6px solid #3b82f6; /* 左边蓝色边线 */
+    background-color: #f7f8fa; /* 浅灰色背景 */
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    font-family: Arial, sans-serif;
+    color: #333;
+    line-height: 1.6;
+    max-width: 900px;
+    margin: 20px auto;
+  }
+  
+  .card h2 {
+    color: #444;
+    font-size: 1.6em;
+    margin-bottom: 15px;
+    text-align: left;
+  }
+  
+  .card p, .card li {
+    font-size: 1rem;
+    text-align: left;
+  }
+  
+  .card ul {
+    padding-left: 20px;
+  }
+  
+  .card strong {
+    font-weight: bold;
+  }
+  
+
+
