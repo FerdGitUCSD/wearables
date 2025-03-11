@@ -451,10 +451,26 @@ function drawTimeline(condition, protocol) {
       .attr("text-anchor", "middle")
       .attr("transform", d => {
         const segmentWidth = xScale(d.end) - xScale(d.start);
-        //const rotation = segmentWidth < 60 ? -45 : 0; // Rotate narrow labels
-        //const x = xScale(d.start + (d.end - d.start) / 2);
-        //const y = timelineHeight / 2 + 25;
-        //return rotation ? `rotate(${rotation},${x},${y})` : null;
+        let rotation = 0;
+        
+        // Apply rotation based on specific condition and protocol combinations
+        if (condition === "AEROBIC" && protocol === "new" && d.name === "70 rpm") {
+          // Always rotate labels for new aerobic protocol
+          rotation = -45;
+        } else if (condition === "AEROBIC" && protocol === "new" && d.name === "75 rpm") {
+            // Rotate all sprint labels in anaerobic condition
+            rotation = -45;
+        } else if (condition === "AEROBIC" && protocol === "new" && d.name === "80 rpm") {
+            // Rotate all sprint labels in anaerobic condition
+            rotation = -45;
+        } else {
+          // For other protocols/conditions, only rotate if segment is narrow
+          //rotation = segmentWidth < 60 ? -45 : 0;
+        }
+        
+        const x = xScale(d.start + (d.end - d.start) / 2);
+        const y = timelineHeight / 2 + 25;
+        return rotation ? `rotate(${rotation},${x},${y})` : null;
       })
       .style("font-size", "10px")
       .style("font-weight", "bold")
@@ -471,6 +487,7 @@ function drawTimeline(condition, protocol) {
         if (d.name === "Sprint 2") return "SP2";
         if (d.name === "Sprint 3") return "SP3";
         if (d.name === "Sprint 4") return "SP4";
+        if (d.name === "Warm up") return "WU";
             
             // Add more abbreviations as needed
         
