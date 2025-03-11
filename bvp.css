@@ -365,3 +365,7 @@ select:focus {
         font-size: 12px;
     }
 }
+
+.aerobic { stroke: #2e7bff !important; }
+.anaerobic { stroke: #ff4d4d !important; }
+.stress { stroke: #00d87a !important; }
