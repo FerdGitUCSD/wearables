@@ -1,5 +1,5 @@
 // Chart dimensions
-const margin = { top: 30, right: 30, bottom: 120, left: 60 },
+const margin = { top: 30, right: 30, bottom: 80, left: 60 },
       width = 960 - margin.left - margin.right,
       height = 400 - margin.top - margin.bottom;
 
@@ -451,30 +451,51 @@ function drawTimeline(condition, protocol) {
       .attr("text-anchor", "middle")
       .attr("transform", d => {
         const segmentWidth = xScale(d.end) - xScale(d.start);
-        const rotation = segmentWidth < 60 ? -45 : 0; // Rotate narrow labels
-        const x = xScale(d.start + (d.end - d.start) / 2);
-        const y = timelineHeight / 2 + 15;
-        return rotation ? `rotate(${rotation},${x},${y})` : null;
+        //const rotation = segmentWidth < 60 ? -45 : 0; // Rotate narrow labels
+        //const x = xScale(d.start + (d.end - d.start) / 2);
+        //const y = timelineHeight / 2 + 25;
+        //return rotation ? `rotate(${rotation},${x},${y})` : null;
       })
       .style("font-size", "10px")
       .style("font-weight", "bold")
-      .text(d => d.name);
+      // In drawTimeline, modify the label text function
+      .text(d => {
+        const segmentWidth = xScale(d.end) - xScale(d.start);
+        // Use abbreviations for narrow segments
+        if (d.name === "Baseline") return "BL";
+        if (d.name === "Cool Down") return "CD";
+        if (d.name === "Real Opinion") return "";
+        if (d.name === "Opposite Opinion") return "";
+        if (d.name === "Subtract Test") return "ST";
+        if (d.name === "Sprint 1") return "SP1";
+        if (d.name === "Sprint 2") return "SP2";
+        if (d.name === "Sprint 3") return "SP3";
+        if (d.name === "Sprint 4") return "SP4";
+            
+            // Add more abbreviations as needed
+        
+        return d.name;
+    })
     
     // Add time markers
     timelineGroup.selectAll(".time-marker")
-      .data(timelineSegments)
-      .enter()
-      .append("text")
-      .attr("class", "time-marker")
-      .attr("x", d => xScale(d.start + (d.end - d.start) / 2))
-      .attr("y", timelineHeight / 2 + 30)
-      .attr("text-anchor", "middle")
-      .style("font-size", "9px")
-      .text(d => {
-        const minutes = Math.floor(d.duration / 60);
-        const seconds = d.duration % 60;
-        return seconds > 0 ? `${minutes}:${seconds.toString().padStart(2, '0')}` : `${minutes}m`;
-      });
+        .data(timelineSegments.filter(d => {
+            // Only include time markers for segments wider than 30px
+            const segmentWidth = xScale(d.end) - xScale(d.start);
+            return segmentWidth >= 30;
+        }))
+        .enter()
+        .append("text")
+        .attr("class", "time-marker")
+        .attr("x", d => xScale(d.start + (d.end - d.start) / 2))
+        .attr("y", timelineHeight / 2 + 30)
+        .attr("text-anchor", "middle")
+        .style("font-size", "9px")
+        .text(d => {
+            const minutes = Math.floor(d.duration / 60);
+            const seconds = d.duration % 60;
+            return seconds > 0 ? `${minutes}:${seconds.toString().padStart(2, '0')}` : `${minutes}m`;
+    });
 }
 
 // Function to check if a participant belongs to old or new protocol
@@ -814,18 +835,17 @@ function createChartForCondition(condition) {
   const yGridGroup = chartGroup.append("g")
     .attr("class", "grid");
   
-  // Axis labels
     // Axis labels
     chartGroup.append("text")
     .attr("class", "axis-label")
-    .attr("transform", `translate(${width / 2}, ${height + 30})`)
+    .attr("transform", `translate(${width / 2}, ${height + 32})`)
     .style("text-anchor", "middle")
     .text("Time (s)");
 
     chartGroup.append("text")
     .attr("class", "axis-label")
     .attr("transform", "rotate(-90)")
-    .attr("y", -margin.left + 15)
+    .attr("y", -margin.left + 20)
     .attr("x", -height / 2)
     .style("text-anchor", "middle")
     .text("Average HR (bpm)");
