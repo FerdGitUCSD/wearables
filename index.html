@@ -121,18 +121,15 @@
   </div>
 
 
-  <div id="container">
+  
     <h2>Temperature Over Time (Line Chart)</h2>
-    <div id="session-filter">
-        <label for="condition-filter">Select Condition:</label>
-        <select id="condition-filter">
-            <option value="ANAEROBIC">ANAEROBIC</option>
-            <option value="AEROBIC">AEROBIC</option>
-            <option value="STRESS">STRESS</option>
-        </select>
+    <p>Try select single session!</p>
+    <div id="chart-container">
+      <div id="legend"></div> <!-- For condition selection -->
+      <svg id="temp-chart"></svg>
+      <div id="summary-stats"></div> <!-- Summary stats below the plot -->
     </div>
-    <svg id="temp-chart"></svg>
-</div>
+  
 <p>This interactive visualization presents time-series temperature data collected from multiple participants across different experimental sessions, allowing users to explore temperature fluctuations over time. 
   The line chart dynamically updates based on session selection, with each participant represented by a distinct color and an accompanying legend for easy identification, and users can filter by session to compare temperature variations across different conditions. Designed for researchers and analysts, this visualization helps uncover trends, identify patterns, and gain insights into temperature changes in various experimental settings. 
 </p>  
