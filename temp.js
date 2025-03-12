@@ -348,7 +348,7 @@ d3.csv('data/combined_temperature_data2.csv').then(function(data) {
             .attr('stroke', d => colorMap.get(d))
             .attr('stroke-width', 2)
             .attr('fill', 'none')
-            .attr('opacity', 0) // Start invisible
+            .attr('opacity', 0)
             .attr('d', d => {
                 const filteredData = data.filter(dd => dd.condition === d && dd.temperature <= 40);
                 const timeMap = d3.rollup(filteredData, v => d3.mean(v, dd => dd.temperature), dd => dd.time);
@@ -357,40 +357,47 @@ d3.csv('data/combined_temperature_data2.csv').then(function(data) {
                 return line(avgData);
             })
             .on('mouseover', function(event, d) {
-                tooltip.transition().duration(400).style("opacity", .9);
+                tooltip.transition()
+                    .duration(200)
+                    .style('opacity', 0.9);
     
                 // Get the mouse position
                 const [mx, my] = d3.pointer(event);
     
                 // Find the closest data point
-                const xVal = x.invert(mx); // Get the time value from mouse x position
-                const idx = bisect(d, xVal); // Find the closest index
-    
-                // Get the data point
-                const closestDataPoint = d[idx];
+                const xVal = x.invert(mx);
+                const filteredData = data.filter(dd => dd.condition === d && dd.temperature <= 40);
+                const idx = bisect(filteredData, xVal);
+                const closestDataPoint = filteredData[idx];
     
                 if (closestDataPoint) {
-                    tooltip.html(`Time: ${closestDataPoint.time.toFixed(2)}<br>Temp: ${closestDataPoint.temperature.toFixed(2)}°C`)
-                        .style("left", (event.pageX + 5) + "px")
-                        .style("top", (event.pageY - 28) + "px");
+                    tooltip.html(`
+                        <strong>Session:</strong> ${d}<br>
+                        <strong>Time:</strong> ${closestDataPoint.time.toFixed(2)}s<br>
+                        <strong>Temperature:</strong> ${closestDataPoint.temperature.toFixed(2)}°C
+                    `)
+                        .style('left', (event.pageX + 5) + 'px')
+                        .style('top', (event.pageY - 28) + 'px');
                 }
             })
             .on('mouseout', function() {
-                tooltip.transition().duration(400).style("opacity", 0); // Hide the tooltip
+                tooltip.transition()
+                    .duration(200)
+                    .style('opacity', 0);
             })
-            .transition() // Fade in new lines
+            .transition()
             .duration(1000)
             .attr('opacity', 1);
     
         // Add phase shadows only when exactly one session is selected
         if (selectedConditions.length === 1) {
-            addPhaseShadows(selectedConditions[0]); // Draw shadows for the current session
+            addPhaseShadows(selectedConditions[0]);
         } else {
-            removePhaseShadows(); // Remove shadows if more than one session is selected
+            removePhaseShadows();
         }
     
-        // After updating the chart, recalculate summary stats
-        brushed({ selection: [x(0), x(maxTime)] }); // Re-trigger brush to update summary stats
+        // Re-trigger brush to update summary stats
+        brushed({ selection: [x(0), x(maxTime)] });
     }
     
 
