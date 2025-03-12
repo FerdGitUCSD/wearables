@@ -175,10 +175,6 @@ d3.csv('data/combined_temperature_data2.csv').then(function(data) {
                             .duration(200)
                             .style('opacity', 0);
                     });
-                    // Add the brush layer AFTER the shadows and tooltip overlays
-                    svg.append("g")
-                    .attr("class", "brush")
-                    .call(brush);
             });
         }
         
