@@ -1,3 +1,4 @@
+// Updated temperature visualization as a thermometer
 d3.csv('data/combined_temperature_data2.csv').then(function(data) {
     console.log(data);
 
@@ -7,7 +8,7 @@ d3.csv('data/combined_temperature_data2.csv').then(function(data) {
         d.temperature = +d.temperature;
     });
 
-    // Define phases for each session
+    // Define phases for each session (unchanged)
     const phases = {
         ANAEROBIC: [
             { start: 0, end: 270, label: 'Baseline' },
@@ -43,10 +44,10 @@ d3.csv('data/combined_temperature_data2.csv').then(function(data) {
         ]
     };
 
-    // Set up the SVG container (larger width and height)
-    const margin = { top: 20, right: 200, bottom: 120, left: 60 };  // Adjust margins if necessary
-    const width = 900 - margin.left - margin.right;  // Increase width
-    const height = 600 - margin.top - margin.bottom;  // Increase height
+    // Set up SVG container for thermometer view
+    const margin = { top: 40, right: 200, bottom: 50, left: 100 };
+    const width = 900 - margin.left - margin.right;
+    const height = 600 - margin.top - margin.bottom;
 
     const svg = d3.select('#temp-chart')
         .attr('width', width + margin.left + margin.right)
@@ -54,355 +55,663 @@ d3.csv('data/combined_temperature_data2.csv').then(function(data) {
         .append('g')
         .attr('transform', `translate(${margin.left},${margin.top})`);
 
-    // Define color scale
-    const colorScale = d3.scaleOrdinal(d3.schemeCategory10);
+    // Define color scale with more distinct, readable colors
+    const colorScale = d3.scaleOrdinal()
+        .domain(['AEROBIC', 'ANAEROBIC', 'STRESS'])
+        .range(['#00CC00', '#FF3300', '#0066FF']); // Brighter green, red, and blue
 
     // Get unique conditions (sessions)
     const conditions = Array.from(new Set(data.map(d => d.condition)));
 
-    // Create a static color map for conditions to ensure consistency
-    const colorMap = new Map();
-    conditions.forEach((condition, index) => {
-        colorMap.set(condition, colorScale(index)); // Assign a fixed color to each session
-    });
+    // Create thermometer dimensions - larger for better visibility
+    const thermWidth = 100;
+    const thermHeight = height - 100;
+    const bulbRadius = thermWidth / 2;
+    const tubeWidth = thermWidth / 3;
 
-    // Define scales
-    const x = d3.scaleLinear()
-    .domain([0, d3.max(data, d => d.time)])  // Ensure the max time in the data is being correctly captured
-    .range([0, width]);
-    const y = d3.scaleLinear().domain([30, 35]).nice().range([height, 0]);
-
+    // Define scales for thermometer and timeline
+    const timeScale = d3.scaleLinear()
+        .domain([0, d3.max(data, d => d.time)])
+        .range([0, width]);
+    
+    const tempScale = d3.scaleLinear()
+        .domain([30, 35]) // Temperature range from your original scale
+        .range([thermHeight, 0]);
+    
     // Create axes
-    const xAxis = svg.append('g')
+    const timeAxis = svg.append('g')
         .attr('class', 'x-axis')
-        .attr('transform', `translate(0,${height})`)
-        .call(d3.axisBottom(x));
-
-    const yAxis = svg.append('g').attr('class', 'y-axis').call(d3.axisLeft(y));
-
-    // Add axis labels
+        .attr('transform', `translate(0,${height - 50})`)
+        .call(d3.axisBottom(timeScale));
+    
     svg.append('text')
-        .attr('transform', `translate(${width / 2},${height + margin.bottom - 10})`)
+        .attr('transform', `translate(${width / 2},${height})`)
         .style('text-anchor', 'middle')
         .text('Time (seconds)');
-
+        
+    // Add thermometer background
+    const thermGroup = svg.append('g')
+        .attr('class', 'thermometer')
+        .attr('transform', `translate(${width/2 - thermWidth/2}, 10)`);
+    
+    // Thermometer bulb with better visual style
+    thermGroup.append('circle')
+        .attr('cx', thermWidth / 2)
+        .attr('cy', thermHeight + bulbRadius)
+        .attr('r', bulbRadius)
+        .attr('fill', '#f0f0f0')
+        .attr('stroke', '#555')
+        .attr('stroke-width', 3);
+        
+    // Add glass reflection effect to bulb
+    thermGroup.append('circle')
+        .attr('cx', thermWidth / 2 - bulbRadius/3)
+        .attr('cy', thermHeight + bulbRadius - bulbRadius/3)
+        .attr('r', bulbRadius/4)
+        .attr('fill', 'white')
+        .attr('opacity', 0.5);
+    
+    // Thermometer tube with improved styling
+    thermGroup.append('rect')
+        .attr('x', (thermWidth - tubeWidth) / 2)
+        .attr('y', 0)
+        .attr('width', tubeWidth)
+        .attr('height', thermHeight)
+        .attr('rx', tubeWidth / 2)
+        .attr('fill', '#f0f0f0')
+        .attr('stroke', '#555')
+        .attr('stroke-width', 3);
+        
+    // Add glass reflection effect to tube
+    thermGroup.append('rect')
+        .attr('x', (thermWidth - tubeWidth) / 2 + tubeWidth * 0.7)
+        .attr('y', 5)
+        .attr('width', tubeWidth * 0.2)
+        .attr('height', thermHeight - 10)
+        .attr('rx', tubeWidth * 0.1)
+        .attr('fill', 'white')
+        .attr('opacity', 0.3);
+        
+    // Add title to the thermometer
     svg.append('text')
+        .attr('x', width/2)
+        .attr('y', 0)
+        .attr('text-anchor', 'middle')
+        .attr('font-size', '18px')
+        .attr('font-weight', 'bold')
+        .text('Body Temperature Response');
+    
+    // Temperature scale on thermometer with improved readability
+    const tempTicks = tempScale.ticks(10);
+    const tempAxisGroup = svg.append('g')
+        .attr('class', 'temp-axis')
+        .attr('transform', `translate(${width/2 - thermWidth/2 - 40}, 10)`);
+    
+    // Add temperature axis title
+    tempAxisGroup.append('text')
         .attr('transform', 'rotate(-90)')
-        .attr('x', -height / 2)
-        .attr('y', -margin.left + 20)
-        .style('text-anchor', 'middle')
+        .attr('x', -thermHeight/2)
+        .attr('y', -30)
+        .attr('text-anchor', 'middle')
+        .attr('font-size', '14px')
+        .attr('font-weight', 'bold')
         .text('Temperature (°C)');
-
+    
+    // Add tick marks with improved styling
+    tempAxisGroup.selectAll('.temp-tick')
+        .data(tempTicks)
+        .enter()
+        .append('g')
+        .attr('class', 'temp-tick')
+        .attr('transform', d => `translate(0, ${tempScale(d)})`)
+        .call(g => {
+            g.append('line')
+                .attr('x1', 0)
+                .attr('x2', 15)
+                .attr('stroke', '#333')
+                .attr('stroke-width', 1.5);
+            g.append('text')
+                .attr('x', -8)
+                .attr('y', 4)
+                .attr('text-anchor', 'end')
+                .attr('font-size', '12px')
+                .attr('font-weight', d => (d % 1 === 0) ? 'bold' : 'normal')
+                .text(d => d + '°C');
+        });
+        
+    // Add temperature thresholds with labels and horizontal lines across chart
+    const thresholds = [
+        { temp: 31, label: 'Low', color: '#00BFFF' },
+        { temp: 32.5, label: 'Normal', color: '#32CD32' },
+        { temp: 34, label: 'High', color: '#FF6347' }
+    ];
+    
+    thresholds.forEach(threshold => {
+        // Add threshold line
+        svg.append('line')
+            .attr('x1', 0)
+            .attr('y1', tempScale(threshold.temp))
+            .attr('x2', width)
+            .attr('y2', tempScale(threshold.temp))
+            .attr('stroke', threshold.color)
+            .attr('stroke-width', 1.5)
+            .attr('stroke-dasharray', '5,5')
+            .attr('opacity', 0.7);
+            
+        // Add threshold label
+        svg.append('text')
+            .attr('x', width - 5)
+            .attr('y', tempScale(threshold.temp) - 5)
+            .attr('text-anchor', 'end')
+            .attr('font-size', '12px')
+            .attr('fill', threshold.color)
+            .attr('font-weight', 'bold')
+            .text(threshold.label);
+    });
+    
     // Tooltip for temperature info
     const tooltip = d3.select("body").append("div")
-    .attr("class", "tooltip-temp")
-    .style("opacity", 0)
-    .style("position", "absolute")
-    .style("background-color", "rgba(0,0,0,0.7)")
-    .style("color", "#fff")
-    .style("padding", "5px")
-    .style("border-radius", "5px")
-    .style("pointer-events", "none");  // Ensure tooltip doesn't block other events
-
-
-    // Line generator
-    const line = d3.line()
-        .x(d => x(d.time))
-        .y(d => y(d.temperature));
-
-    // Brush for zooming
-    const brush = d3.brushX()
-        .extent([[0, 0], [width, height]])
-        .on("end", brushed);
-
-    svg.append("g").attr("class", "brush").call(brush);
+        .attr("class", "tooltip-temp")
+        .style("opacity", 0)
+        .style("position", "absolute")
+        .style("background-color", "rgba(0,0,0,0.7)")
+        .style("color", "#fff")
+        .style("padding", "5px")
+        .style("border-radius", "5px")
+        .style("pointer-events", "none");
 
     // Store selected sessions
     let selectedSessions = conditions;  // Initially all sessions are selected
-
-    const customColors = ['#FF6347', '#FFD700', '#32CD32', '#1E90FF', '#FF1493', '#8A2BE2', '#A52A2A', '#D2691E'];
-
-    const phaseColorScale = d3.scaleOrdinal()
-        .domain(['Baseline', 'Warm up', 'Sprint 1', 'Cool Down', 'Sprint 2', 'Sprint 3', 'Sprint 4', 'Rest', 'TMCT', 'First Rest', 'Real Opinion', 'Opposite Opinion', 'Second Rest', 'Subtract Test'])
-        .range(customColors);  // Use custom colors here
-
-    function addPhaseShadows(session) {
-        const sessionPhases = phases[session];
-        if (sessionPhases) {
-            sessionPhases.forEach(phase => {
-                // Add the phase shadow rectangle
-                const phaseRect = svg.append('rect')
-                    .attr('x', x(phase.start))
-                    .attr('y', 0)
-                    .attr('width', x(phase.end) - x(phase.start))
-                    .attr('height', height)
-                    .attr('fill', phaseColorScale(phase.label))
-                    .attr('opacity', 0.1)
-                    .attr('class', 'phase-shadow')
-                    .style('pointer-events', 'none');
+    let currentTime = 0;
+    let animationSpeed = 10; // milliseconds per time unit
+    let animationRunning = false;
+    let animationTimer;
     
-                // Add a transparent overlay for tooltips
-                svg.append('rect')
-                    .attr('x', x(phase.start))
-                    .attr('y', 0)
-                    .attr('width', x(phase.end) - x(phase.start))
-                    .attr('height', height)
-                    .attr('fill', 'transparent')
-                    .attr('class', 'phase-tooltip-overlay')
-                    .style('pointer-events', 'all')
-                    .on('mouseover', function(event) {
-                        // Only show tooltip when exactly one session is selected
-                        if (selectedSessions.length === 1) {
-                            tooltip.transition()
-                                .duration(200)
-                                .style('opacity', 0.9);
+    // Create a mercury element for each condition
+    const mercuryElements = {};
     
-                            // Set the tooltip content with detailed description
-                            const phaseDescription = getPhaseDescription(phase.label);
-                            tooltip.html(`
-                                <strong>Phase:</strong> ${phase.label}<br>
-                                <strong>Start:</strong> ${phase.start}s<br>
-                                <strong>End:</strong> ${phase.end}s<br>
-                                <strong>Description:</strong> ${phaseDescription}
-                            `)
-                                .style('left', (event.pageX + 5) + 'px')
-                                .style('top', (event.pageY - 28) + 'px');
-                        }
-                    })
-                    .on('mouseout', function() {
-                        // Hide the custom tooltip
-                        tooltip.transition()
-                            .duration(200)
-                            .style('opacity', 0);
-                    });
-            });
-        }
+    conditions.forEach(condition => {
+        // Create the mercury in the tube
+        const mercury = thermGroup.append('rect')
+            .attr('class', `mercury-${condition}`)
+            .attr('x', (thermWidth - tubeWidth) / 2)
+            .attr('y', thermHeight) // Start at the bottom
+            .attr('width', tubeWidth)
+            .attr('height', 0) // Start with zero height
+            .attr('fill', colorScale(condition))
+            .attr('opacity', 0); // Hidden initially
         
-    }
-    
-    // Function to get phase descriptions
-    function getPhaseDescription(phaseLabel) {
-        const descriptions = {
-            'Baseline': 'Initial resting measurement with minimal external stimuli to establish baseline heart rate.',
-            'Warm up': 'Gradual increase in activity to prepare the body.',
-            'Sprint 1': 'Short burst of high-intensity activity.',
-            'Sprint 2': 'Second burst of high-intensity activity.',
-            'Sprint 3': 'Third burst of high-intensity activity.',
-            'Sprint 4': 'Final burst of high-intensity activity.',
-            'Cool Down': 'Gradual decrease in activity to return to resting state.',
-            'Rest': 'Recovery period after initial stress task, allowing physiological measures to return toward baseline.',
-            'TMCT': 'Trier Mental Challenge Test: Mathematical tasks with time pressure and annoying sounds to induce stress.',
-            'First Rest': 'Initial rest period after the TMCT.',
-            'Real Opinion': 'Participants express their genuine opinions.',
-            'Opposite Opinion': 'Participants argue against their true beliefs, creating cognitive dissonance.',
-            'Second Rest': 'Additional recovery period after subsequent stress tasks.',
-            'Subtract Test': 'Participants count backward from 1022 in steps of 13, speaking answers aloud.',
-            '75 rpm': 'Cycling at 75 revolutions per minute.',
-            '80 rpm': 'Cycling at 80 revolutions per minute.',
-            '85 rpm': 'Cycling at 85 revolutions per minute.',
-            '90/95 rpm': 'Cycling at 90 or 95 revolutions per minute.'
-        };
-        return descriptions[phaseLabel] || 'No description available.';
-    }
-    
-
-    // Function to remove phase shadows
-    function removePhaseShadows() {
-        svg.selectAll('.phase-shadow').remove();
-    }
-
-    // Update function for summary stats
-    function updateSummaryStats(avg, min, max) {
-        // Remove any previous summary statistics
-        d3.selectAll('.summary-stats').remove();
-    
-        // Create a div container for the summary statistics below the plot
-        const summaryDiv = d3.select('#summary-stats');
-    
-        // Ensure avg, min, and max are valid numbers before applying .toFixed()
-        avg = (typeof avg === 'number' && !isNaN(avg)) ? avg.toFixed(2) : 'N/A';
-        min = (typeof min === 'number' && !isNaN(min)) ? min : 'N/A';
-        max = (typeof max === 'number' && !isNaN(max)) ? max : 'N/A';
-    
-        // Add the statistics
-        summaryDiv
-            .html('')  // Clear any previous content
-            .append('div')
-            .attr('class', 'summary-stat')
-            .html(`<strong>Avg:</strong> ${avg}°C`);
-    
-        summaryDiv
-            .append('div')
-            .attr('class', 'summary-stat')
-            .html(`<strong>Min:</strong> ${min}°C`);
-    
-        summaryDiv
-            .append('div')
-            .attr('class', 'summary-stat')
-            .html(`<strong>Max:</strong> ${max}°C`);
-    }
-
-    function brushed(event) {
-        if (!event.selection) return;
-    
-        const [x0, x1] = event.selection.map(x.invert);
-    
-        // Get the brushed data range filtered by selected sessions
-        const selectedData = data.filter(d => 
-            selectedSessions.includes(d.condition) && d.time >= x0 && d.time <= x1);
-    
-        // Filter out temperatures above 40°C for the summary statistics
-        const filteredTemperatures = selectedData.map(d => d.temperature).filter(temp => temp <= 40);
-    
-        // Check if filteredTemperatures is empty, and show an appropriate message
-        if (filteredTemperatures.length === 0) {
-            updateSummaryStats("No valid data in selected range", "N/A", "N/A");
-            return;
-        }
-    
-        // Calculate summary statistics
-        const avgTemp = d3.mean(filteredTemperatures);
-        const minTemp = d3.min(filteredTemperatures);
-        const maxTemp = d3.max(filteredTemperatures);
-    
-        // Display summary statistics below the plot
-        updateSummaryStats(avgTemp, minTemp, maxTemp);
-    }
-    
-
-    // Create checkboxes for condition selection (sessions)
-    const legend = d3.select("#legend");
-    conditions.forEach((condition, index) => {
-        const label = legend.append("label");
-        label.append("input")
-            .attr("type", "checkbox")
-            .attr("id", `checkbox-${condition}`)
-            .property("checked", true)
-            .on("change", function() {
-                // Update selected sessions based on checkbox state
-                selectedSessions = conditions.filter(c => d3.select(`#checkbox-${c}`).property('checked'));
-
-                // After updating selected sessions, update the chart and summary stats
-                updateChart();
-            });
-
-        label.append("span").text(condition).style("color", colorMap.get(condition)); // Use the color from the map
-        legend.append("br");
+        // Create the mercury in the bulb
+        const bulbMercury = thermGroup.append('circle')
+            .attr('class', `mercury-bulb-${condition}`)
+            .attr('cx', thermWidth / 2)
+            .attr('cy', thermHeight + bulbRadius)
+            .attr('r', bulbRadius - 2) // Slightly smaller than bulb
+            .attr('fill', colorScale(condition))
+            .attr('opacity', 0); // Hidden initially
+        
+        mercuryElements[condition] = { tube: mercury, bulb: bulbMercury };
     });
-
-    // Bisector function to find the closest data point on the line
-    const bisect = d3.bisector(d => d.time).left;
-
-    function updateChart() {
-        const selectedConditions = selectedSessions;
     
-        // Calculate the maximum time for the selected sessions
-        let maxTime = 0;
-        selectedConditions.forEach((condition) => {
-            const filteredData = data.filter(d => d.condition === condition && d.temperature <= 40);
-            const sessionMaxTime = d3.max(filteredData, d => d.time);
-            if (sessionMaxTime > maxTime) {
-                maxTime = sessionMaxTime;
+    // Create progress indicator (timeline cursor)
+    const timeIndicator = svg.append('line')
+        .attr('class', 'time-indicator')
+        .attr('x1', 0)
+        .attr('y1', 0)
+        .attr('x2', 0)
+        .attr('y2', height - 50)
+        .attr('stroke', '#ff0000')
+        .attr('stroke-width', 2)
+        .attr('stroke-dasharray', '5,5');
+    
+    // Find the maximum time value in the dataset
+    const maxTime = d3.max(data, d => d.time);
+    
+    // Create a control panel container
+    const controlPanel = d3.select('#chart-container')
+        .append('div')
+        .attr('id', 'control-panel')
+        .style('margin', '15px auto')
+        .style('padding', '15px')
+        .style('background-color', '#f8f8f8')
+        .style('border-radius', '8px')
+        .style('box-shadow', '0 2px 10px rgba(0,0,0,0.1)')
+        .style('max-width', '600px')
+        .style('display', 'flex')
+        .style('flex-wrap', 'wrap')
+        .style('justify-content', 'center')
+        .style('align-items', 'center');
+    
+    // Add control panel title
+    controlPanel.append('div')
+        .style('width', '100%')
+        .style('text-align', 'center')
+        .style('margin-bottom', '10px')
+        .style('font-weight', 'bold')
+        .style('font-size', '16px')
+        .text('Visualization Controls');
+    
+    // Add play/pause button with icon
+    const playButton = controlPanel.append('button')
+        .attr('id', 'play-button')
+        .style('margin', '10px')
+        .style('padding', '8px 20px')
+        .style('cursor', 'pointer')
+        .style('display', 'flex')
+        .style('align-items', 'center')
+        .style('font-weight', 'bold')
+        .style('font-size', '14px')
+        .on('click', toggleAnimation);
+    
+    playButton.append('span')
+        .html('▶ Play')
+        .attr('id', 'play-button-text');
+    
+    // Add reset button with icon
+    const resetButton = controlPanel.append('button')
+        .attr('id', 'reset-button')
+        .style('margin', '10px')
+        .style('padding', '8px 20px')
+        .style('cursor', 'pointer')
+        .style('display', 'flex')
+        .style('align-items', 'center')
+        .style('font-weight', 'bold')
+        .style('font-size', '14px')
+        .on('click', resetAnimation);
+    
+    resetButton.append('span')
+        .html('↻ Reset');
+    
+    // Add time display
+    const timeDisplay = controlPanel.append('div')
+        .attr('id', 'time-display')
+        .style('margin', '10px 20px')
+        .style('padding', '8px 15px')
+        .style('background', '#fff')
+        .style('border-radius', '4px')
+        .style('font-weight', 'bold')
+        .style('min-width', '120px')
+        .style('text-align', 'center')
+        .text('Time: 0s');
+    
+    // Add speed control slider with better labeling
+    const speedControlContainer = controlPanel.append('div')
+        .style('margin', '10px')
+        .style('display', 'flex')
+        .style('flex-direction', 'column')
+        .style('align-items', 'center');
+        
+    speedControlContainer.append('label')
+        .attr('for', 'speed-slider')
+        .style('margin-bottom', '5px')
+        .style('font-weight', 'bold')
+        .text('Animation Speed');
+        
+    const speedControl = speedControlContainer.append('input')
+        .attr('id', 'speed-slider')
+        .attr('type', 'range')
+        .attr('min', 1)
+        .attr('max', 50)
+        .attr('value', 10)
+        .style('width', '150px')
+        .on('input', function() {
+            animationSpeed = 51 - this.value; // Invert so higher value = faster
+            
+            // Update speed label
+            const speedPercentage = Math.round((this.value / 50) * 100);
+            d3.select('#speed-value').text(`${speedPercentage}%`);
+        });
+        
+    speedControlContainer.append('span')
+        .attr('id', 'speed-value')
+        .style('margin-top', '5px')
+        .text('20%');
+    
+    // Function to update the thermometer based on the current time
+    function updateThermometer(time) {
+        // Update time indicator position
+        timeIndicator.attr('x1', timeScale(time))
+            .attr('x2', timeScale(time));
+        
+        // Update time display
+        d3.select('#time-display').text(`Time: ${Math.round(time)}s`);
+        
+        // For each selected session, update the thermometer mercury
+        selectedSessions.forEach(condition => {
+            const filteredData = data.filter(d => 
+                d.condition === condition && 
+                d.temperature <= 40 &&
+                d.time <= time
+            );
+            
+            if (filteredData.length > 0) {
+                // Get the temperature at this time point
+                // Find the closest time point that's less than or equal to the current time
+                const closestData = filteredData.reduce((prev, curr) => {
+                    return (Math.abs(curr.time - time) < Math.abs(prev.time - time) ? curr : prev);
+                });
+                
+                const temp = closestData.temperature;
+                
+                // Update the thermometer mercury height and position with smooth transition
+                const mercuryHeight = thermHeight - tempScale(temp);
+                const mercury = mercuryElements[condition].tube;
+                const bulbMercury = mercuryElements[condition].bulb;
+                
+                mercury.transition()
+                      .duration(animationSpeed * 0.8) // Make transition slightly faster than animation speed
+                      .attr('y', tempScale(temp))
+                      .attr('height', mercuryHeight)
+                      .attr('opacity', 1);
+                
+                bulbMercury.attr('opacity', 1);
+                
+                // Update temperature value display
+                d3.select('#temp-value')
+                  .text(`${temp.toFixed(2)}°C`)
+                  .style('color', getTemperatureColor(temp));
+                
+                // Update phase highlight if we have exactly one session selected
+                if (selectedSessions.length === 1) {
+                    updatePhaseHighlight(condition, time);
+                }
             }
         });
-    
-        // Update the x-axis domain based on the maximum time of the selected sessions
-        x.domain([0, maxTime]);
-    
-        // Update the x-axis with a smooth transition
-        svg.select('.x-axis')
-            .transition()
-            .duration(1000)
-            .ease(d3.easeCubicInOut)
-            .call(d3.axisBottom(x));
-    
-        // Bind data to lines and update/enter/exit
-        const lines = svg.selectAll('.line')
-            .data(selectedConditions, d => d); // Use session name as key
-    
-        // Remove lines for unselected sessions
-        lines.exit()
-            .transition()
-            .duration(1000)
-            .attr('opacity', 0) // Fade out
-            .remove();
-    
-        // Update existing lines with transitions
-        lines.transition()
-            .duration(1000)
-            .ease(d3.easeCubicInOut)
-            .attr('d', d => {
-                const filteredData = data.filter(dd => dd.condition === d && dd.temperature <= 40);
-                const timeMap = d3.rollup(filteredData, v => d3.mean(v, dd => dd.temperature), dd => dd.time);
-                const avgData = Array.from(timeMap, ([time, temperature]) => ({ time: +time, temperature }))
-                    .sort((a, b) => a.time - b.time);
-                return line(avgData);
-            })
-            .attr('stroke', d => colorMap.get(d))
-            .attr('opacity', 1); // Ensure lines are visible
-    
-        // Add new lines for newly selected sessions
-        lines.enter()
-            .append('path')
-            .attr('class', 'line')
-            .attr('stroke', d => colorMap.get(d))
-            .attr('stroke-width', 2)
-            .attr('fill', 'none')
-            .attr('opacity', 0)
-            .attr('d', d => {
-                const filteredData = data.filter(dd => dd.condition === d && dd.temperature <= 40);
-                const timeMap = d3.rollup(filteredData, v => d3.mean(v, dd => dd.temperature), dd => dd.time);
-                const avgData = Array.from(timeMap, ([time, temperature]) => ({ time: +time, temperature }))
-                    .sort((a, b) => a.time - b.time);
-                return line(avgData);
-            })
-            .on('mouseover', function(event, d) {
-                tooltip.transition()
-                    .duration(200)
-                    .style('opacity', 0.9);
-    
-                // Get the mouse position
-                const [mx, my] = d3.pointer(event);
-    
-                // Find the closest data point
-                const xVal = x.invert(mx);
-                const filteredData = data.filter(dd => dd.condition === d && dd.temperature <= 40);
-                const idx = bisect(filteredData, xVal);
-                const closestDataPoint = filteredData[idx];
-    
-                if (closestDataPoint) {
-                    tooltip.html(`
-                        <strong>Session:</strong> ${d}<br>
-                        <strong>Time:</strong> ${closestDataPoint.time.toFixed(2)}s<br>
-                        <strong>Temperature:</strong> ${closestDataPoint.temperature.toFixed(2)}°C
-                    `)
-                        .style('left', (event.pageX + 5) + 'px')
-                        .style('top', (event.pageY - 28) + 'px');
-                }
-            })
-            .on('mouseout', function() {
-                tooltip.transition()
-                    .duration(200)
-                    .style('opacity', 0);
-            })
-            .transition()
-            .duration(1000)
-            .attr('opacity', 1);
-    
-        // Add phase shadows only when exactly one session is selected
-        if (selectedConditions.length === 1) {
-            addPhaseShadows(selectedConditions[0]);
+        
+        // Update current phase label with better formatting
+        if (selectedSessions.length === 1) {
+            const condition = selectedSessions[0];
+            const currentPhase = getCurrentPhase(condition, time);
+            
+            if (currentPhase) {
+                const phaseDescription = getPhaseDescription(currentPhase);
+                d3.select('#current-phase')
+                    .html(`<span style="color:${colorScale(condition)}">▮</span> <strong>${currentPhase}</strong>: ${phaseDescription}`)
+                    .style('opacity', 1);
+            } else {
+                d3.select('#current-phase')
+                    .html(`<span style="color:#999">▮</span> <strong>No active phase</strong>`)
+                    .style('opacity', 0.7);
+            }
+        } else if (selectedSessions.length > 1) {
+            d3.select('#current-phase')
+                .html(`<strong>Multiple sessions selected</strong>: Select a single session to see phase details.`)
+                .style('opacity', 0.7);
         } else {
-            removePhaseShadows();
+            d3.select('#current-phase')
+                .html(`<strong>No sessions selected</strong>: Please select at least one session.`)
+                .style('opacity', 0.7);
         }
-    
-        // Re-trigger brush to update summary stats
-        brushed({ selection: [x(0), x(maxTime)] });
     }
     
-
-    // Initial chart setup
-    updateChart();
+    // Helper function to get color based on temperature value
+    function getTemperatureColor(temp) {
+        if (temp < 32) return '#00BFFF'; // Cool blue for low temp
+        if (temp < 33) return '#32CD32'; // Green for normal temp
+        if (temp < 34) return '#FFA500'; // Orange for warm temp
+        return '#FF4500';                // Red-orange for high temp
+    }
+    
+    // Function to get the current phase name
+    function getCurrentPhase(condition, time) {
+        const sessionPhases = phases[condition];
+        if (sessionPhases) {
+            for (const phase of sessionPhases) {
+                if (time >= phase.start && time <= phase.end) {
+                    return phase.label;
+                }
+            }
+        }
+        return null;
+    }
+    
+    // Function to create/update the phase highlights
+    function updatePhaseHighlight(condition, time) {
+        // Remove existing highlights
+        svg.selectAll('.phase-highlight').remove();
+        
+        const sessionPhases = phases[condition];
+        if (sessionPhases) {
+            // Find current phase
+            const currentPhase = sessionPhases.find(phase => 
+                time >= phase.start && time <= phase.end
+            );
+            
+            if (currentPhase) {
+                // Add highlight for current phase
+                svg.append('rect')
+                    .attr('class', 'phase-highlight')
+                    .attr('x', timeScale(currentPhase.start))
+                    .attr('y', 0)
+                    .attr('width', timeScale(currentPhase.end) - timeScale(currentPhase.start))
+                    .attr('height', height - 50)
+                    .attr('fill', colorScale(condition))
+                    .attr('opacity', 0.2);
+                
+                // Add phase label
+                svg.append('text')
+                    .attr('class', 'phase-highlight')
+                    .attr('x', timeScale(currentPhase.start) + 5)
+                    .attr('y', 20)
+                    .text(`Phase: ${currentPhase.label}`)
+                    .attr('fill', '#333')
+                    .attr('font-weight', 'bold');
+            }
+        }
+    }
+    
+    // Animation function
+    function animate() {
+        if (currentTime >= maxTime) {
+            stopAnimation();
+            return;
+        }
+        
+        updateThermometer(currentTime);
+        currentTime += 10; // Increment by 10 seconds each frame
+        
+        animationTimer = setTimeout(animate, animationSpeed);
+    }
+    
+    // Start/stop animation
+    function toggleAnimation() {
+        if (animationRunning) {
+            stopAnimation();
+        } else {
+            startAnimation();
+        }
+    }
+    
+    function startAnimation() {
+        if (!animationRunning) {
+            animationRunning = true;
+            playButton.text('Pause');
+            animate();
+        }
+    }
+    
+    function stopAnimation() {
+        clearTimeout(animationTimer);
+        animationRunning = false;
+        playButton.text('Play');
+    }
+    
+    function resetAnimation() {
+        stopAnimation();
+        currentTime = 0;
+        updateThermometer(currentTime);
+        
+        // Clear all mercury
+        conditions.forEach(condition => {
+            mercuryElements[condition].tube.attr('height', 0).attr('opacity', 0);
+            mercuryElements[condition].bulb.attr('opacity', 0);
+        });
+        
+        // Reset phase highlight
+        svg.selectAll('.phase-highlight').remove();
+        d3.select('#current-phase').text('');
+    }
+    
+    // Add current phase display
+    d3.select('#chart-container')
+        .append('div')
+        .attr('id', 'current-phase')
+        .style('margin-top', '10px')
+        .style('font-weight', 'bold')
+        .style('font-size', '16px');
+    
+    // Create an enhanced legend for condition selection
+    const legend = d3.select("#legend")
+        .style('padding', '15px')
+        .style('background-color', 'rgba(255, 255, 255, 0.9)')
+        .style('border-radius', '8px')
+        .style('border', '1px solid #ddd')
+        .style('box-shadow', '0 2px 8px rgba(0,0,0,0.1)')
+        .style('max-width', '250px');
+    
+    // Add legend title
+    legend.append('div')
+        .style('font-weight', 'bold')
+        .style('font-size', '16px')
+        .style('margin-bottom', '10px')
+        .style('border-bottom', '1px solid #ddd')
+        .style('padding-bottom', '5px')
+        .text('Activity Types');
+    
+    // Add description
+    legend.append('div')
+        .style('font-size', '12px')
+        .style('margin-bottom', '10px')
+        .style('color', '#666')
+        .text('Select one or more activities to compare temperature responses:');
+    
+    // Create condition descriptions
+    const conditionDescriptions = {
+        'AEROBIC': 'Steady-state cardio exercise',
+        'ANAEROBIC': 'High-intensity interval training',
+        'STRESS': 'Mental stress test activities'
+    };
+    
+    // Add checkboxes for each condition with better styling
+    conditions.forEach(condition => {
+        const conditionContainer = legend.append('div')
+            .style('margin', '12px 0')
+            .style('padding', '8px')
+            .style('border-radius', '4px')
+            .style('background-color', 'rgba(240, 240, 240, 0.5)')
+            .style('border-left', `4px solid ${colorScale(condition)}`);
+        
+        const label = conditionContainer.append('label')
+            .style('display', 'flex')
+            .style('align-items', 'center')
+            .style('cursor', 'pointer');
+        
+        label.append('input')
+            .attr('type', 'checkbox')
+            .attr('id', `checkbox-${condition}`)
+            .property('checked', true)
+            .style('margin-right', '10px')
+            .style('transform', 'scale(1.2)')
+            .on('change', function() {
+                // Update selected sessions based on checkbox state
+                selectedSessions = conditions.filter(c => 
+                    d3.select(`#checkbox-${c}`).property('checked'));
+                
+                // Update visibility of mercury for each condition
+                conditions.forEach(c => {
+                    const isSelected = selectedSessions.includes(c);
+                    mercuryElements[c].tube
+                        .transition()
+                        .duration(300)
+                        .attr('opacity', isSelected ? 1 : 0);
+                    
+                    mercuryElements[c].bulb
+                        .transition()
+                        .duration(300)
+                        .attr('opacity', isSelected ? 1 : 0);
+                });
+                
+                // Update phase highlight if needed
+                if (selectedSessions.length === 1) {
+                    updatePhaseHighlight(selectedSessions[0], currentTime);
+                } else {
+                    svg.selectAll('.phase-highlight').remove();
+                }
+                
+                // Update current phase info
+                updateThermometer(currentTime);
+            });
+        
+        // Add condition name with color indicator
+        const nameContainer = label.append('div')
+            .style('flex-grow', '1');
+        
+        nameContainer.append('div')
+            .style('font-weight', 'bold')
+            .style('display', 'flex')
+            .style('align-items', 'center')
+            .html(`<span style="display:inline-block; width:12px; height:12px; background-color:${colorScale(condition)}; margin-right:8px; border-radius:2px;"></span> ${condition}`);
+        
+        // Add condition description
+        nameContainer.append('div')
+            .style('font-size', '11px')
+            .style('color', '#666')
+            .style('margin-top', '3px')
+            .style('margin-left', '20px')
+            .text(conditionDescriptions[condition] || '');
+    });
+    
+    // Add a compare button to quickly toggle between single/multiple selection
+    legend.append('button')
+        .attr('id', 'compare-button')
+        .style('width', '100%')
+        .style('padding', '8px')
+        .style('margin-top', '10px')
+        .style('border-radius', '4px')
+        .style('background-color', '#f0f0f0')
+        .style('border', '1px solid #ddd')
+        .style('cursor', 'pointer')
+        .text('Compare All')
+        .on('click', function() {
+            const allChecked = conditions.every(c => 
+                d3.select(`#checkbox-${c}`).property('checked'));
+            
+            if (allChecked) {
+                // If all are selected, keep only the first one
+                conditions.forEach((c, i) => {
+                    d3.select(`#checkbox-${c}`).property('checked', i === 0);
+                });
+                d3.select(this).text('Compare All');
+            } else {
+                // Otherwise select all
+                conditions.forEach(c => {
+                    d3.select(`#checkbox-${c}`).property('checked', true);
+                });
+                d3.select(this).text('Show Single');
+            }
+            
+            // Trigger the change event on the first checkbox to update the view
+            d3.select(`#checkbox-${conditions[0]}`).dispatch('change');
+        });
+        
+    // Add temperature value display
+    controlPanel.append('div')
+        .attr('id', 'temp-display')
+        .style('margin', '10px 20px')
+        .style('padding', '8px 15px')
+        .style('background', '#fff')
+        .style('border-radius', '4px')
+        .style('font-weight', 'bold')
+        .style('min-width', '120px')
+        .style('text-align', 'center');
+    
+    // Add temperature value in the display
+    d3.select('#temp-display')
+        .append('span')
+        .attr('id', 'temp-value')
+        .style('font-size', '16px')
+        .text('--°C');
+    
+    // Initialize with first frame
+    updateThermometer(0);
 });
-
-
