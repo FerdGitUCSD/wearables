@@ -70,7 +70,7 @@ d3.csv('data/combined_temperature_data2.csv').then(function(data) {
     const x = d3.scaleLinear()
     .domain([0, d3.max(data, d => d.time)])  // Ensure the max time in the data is being correctly captured
     .range([0, width]);
-    const y = d3.scaleLinear().domain([28, 35]).nice().range([height, 0]);
+    const y = d3.scaleLinear().domain([30, 35]).nice().range([height, 0]);
 
     // Create axes
     const xAxis = svg.append('g')
@@ -175,27 +175,32 @@ d3.csv('data/combined_temperature_data2.csv').then(function(data) {
                             .duration(200)
                             .style('opacity', 0);
                     });
+                    // Add the brush layer AFTER the shadows and tooltip overlays
+                    svg.append("g")
+                    .attr("class", "brush")
+                    .call(brush);
             });
         }
+        
     }
     
     // Function to get phase descriptions
     function getPhaseDescription(phaseLabel) {
         const descriptions = {
-            'Baseline': 'Initial resting state before the session begins.',
+            'Baseline': 'Initial resting measurement with minimal external stimuli to establish baseline heart rate.',
             'Warm up': 'Gradual increase in activity to prepare the body.',
             'Sprint 1': 'Short burst of high-intensity activity.',
             'Sprint 2': 'Second burst of high-intensity activity.',
             'Sprint 3': 'Third burst of high-intensity activity.',
             'Sprint 4': 'Final burst of high-intensity activity.',
             'Cool Down': 'Gradual decrease in activity to return to resting state.',
-            'Rest': 'Period of inactivity for recovery.',
-            'TMCT': 'Task-specific mental challenge test.',
+            'Rest': 'Recovery period after initial stress task, allowing physiological measures to return toward baseline.',
+            'TMCT': 'Trier Mental Challenge Test: Mathematical tasks with time pressure and annoying sounds to induce stress.',
             'First Rest': 'Initial rest period after the TMCT.',
             'Real Opinion': 'Participants express their genuine opinions.',
             'Opposite Opinion': 'Participants argue against their true beliefs, creating cognitive dissonance.',
-            'Second Rest': 'Rest period after the opinion tasks.',
-            'Subtract Test': 'Mental arithmetic task to induce stress.',
+            'Second Rest': 'Additional recovery period after subsequent stress tasks.',
+            'Subtract Test': 'Participants count backward from 1022 in steps of 13, speaking answers aloud.',
             '75 rpm': 'Cycling at 75 revolutions per minute.',
             '80 rpm': 'Cycling at 80 revolutions per minute.',
             '85 rpm': 'Cycling at 85 revolutions per minute.',
