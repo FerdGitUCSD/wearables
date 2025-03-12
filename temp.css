@@ -29,29 +29,31 @@
 
 .tooltip-temp {
     position: absolute;
-    background-color: rgba(0, 0, 0, 0.7);
+    background: rgba(0, 0, 0, 0.8); /* Dark translucent */
     color: white;
-    padding: 5px;
-    border-radius: 3px;
-    font-size: 12px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 14px;
     pointer-events: none;
     opacity: 0;
-    transition: opacity 0.2s;
+    transition: opacity 0.3s ease-in-out, transform 0.2s ease-in-out;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+    transform: translateY(-5px);
 }
 
 .tooltip span {
     font-weight: bold;
 }
 
-.tooltip-header {
+/* .tooltip-header {
     font-weight: bold;
     font-size: 14px;
-}
+} */
 
-.tooltip-temp,
+/* .tooltip-temp,
 .tooltip-time {
     margin: 5px 0;
-}
+} */
 
 
 .phase-shadow {
