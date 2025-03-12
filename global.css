@@ -3,6 +3,7 @@ body {
     font: 100%/1.5;
     max-width: min(120ch, 80vw);
     margin-inline: max(1em, (100% - 120ch) / 2);
+    text-align: center;
 }
 
 h1 {
