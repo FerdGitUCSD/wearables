@@ -104,11 +104,18 @@
   
   
   
-    <div id="eda1">
+  <div id="eda1">
     <h2>Electrodermal Activity (EDA) Over Time</h2>
     <div class="controls">
         <label for="subjectSelect">Subject Select:</label>
         <select id="subjectSelect"></select>       
+    </div>
+
+    <div class="eda-experiment-controls">
+      <label>Select experiment types to display:</label>
+      <label><input type="checkbox" value="Stress" checked> Stress</label>
+      <label><input type="checkbox" value="Aerobic" checked> Aerobic</label>
+      <label><input type="checkbox" value="Anaerobic" checked> Anaerobic</label>
     </div>
     <div id="eda-chart"></div>
     <div id="eda-stats-panel" class="eda-comparison">

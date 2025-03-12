@@ -36,6 +36,7 @@ const edatooltip = d3.select("body").append("div")
     .style("opacity", 0);
 
 let eda_allData = [];
+let selectedSubjects = ["S01"]; // 默认选中第一个受试者
 const eda_startTime = new Date(2025, 0, 1, 0, 0, 0);
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -46,7 +47,7 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
     }
 
-    d3.csv("data/Modified_EDA_Data.csv").then(data => {
+    d3.csv("data/Merged_Data.csv").then(data => {
         eda_allData = data.map(d => ({
             Subject: d.Subject,  
             Experiment: d.Experiment,
@@ -62,7 +63,23 @@ document.addEventListener("DOMContentLoaded", function () {
             `<option value="${subject}" ${subject === "S01" ? "selected" : ""}>${subject}</option>`
         ).join("");
 
-        eda_subjectSelect.addEventListener("change", eda_updateChart);
+        // 修改后的多选逻辑
+        eda_subjectSelect.addEventListener("change", function(e) {
+            if (e.shiftKey) {
+                if (!selectedSubjects.includes(this.value)) {
+                    selectedSubjects.push(this.value);
+                }
+            } else {
+                selectedSubjects = [this.value];
+            }
+            eda_updateChart();
+        });
+
+        // 添加实验类型复选框的事件监听器
+        document.querySelectorAll('.eda-experiment-controls input').forEach(checkbox => {
+            checkbox.addEventListener("change", eda_updateChart);
+        });
+
         eda_updateChart();
 
     }).catch(error => console.error("❌ Error loading CSV:", error));
@@ -113,25 +130,24 @@ function eda_updateChart() {
     edachartArea.selectAll(".line").remove();
     edachartArea.selectAll(".legend").remove();
     edachartArea.selectAll(".eda-data-point").remove();
+    edachartArea.selectAll(".peak-label").remove();
     edachartArea.on("mousemove", null).on("mouseleave", null);
 
-    const selectedSubject = document.getElementById("subjectSelect").value;
-    const filteredData = eda_allData.filter(d => d.Subject === selectedSubject);
+    // 获取激活的实验类型
+    const activeExperiments = Array.from(
+        document.querySelectorAll('.eda-experiment-controls input:checked')
+    ).map(el => el.value);
+
+    // 过滤数据
+    const filteredData = eda_allData.filter(d => 
+        selectedSubjects.includes(d.Subject) && 
+        activeExperiments.includes(d.Experiment)
+    );
 
     if (filteredData.length === 0) {
         console.error("⚠️ No data available!");
         return;
     }
-
-    // Define color mapping
-    const eda_colorMapping = {
-        "Stress": "#F3A74F",
-        "Aerobic": "#0077B6",
-        "Anaerobic": "#F94144"
-    };
-    const eda_colorScale = d3.scaleOrdinal()
-        .domain(Object.keys(eda_colorMapping))
-        .range(Object.values(eda_colorMapping));
 
     // ========== Scale Definitions ==========
     const xScale = d3.scaleTime()
@@ -182,19 +198,33 @@ function eda_updateChart() {
     experiments.forEach(experiment => {
         const experimentData = filteredData.filter(d => d.Experiment === experiment);
         
+        // 添加实验特定的class
         edachartArea.append("path")
             .datum(experimentData)
-            .attr("class", "line")
+            .attr("class", `line line-${experiment}`) // 添加双重class
             .attr("fill", "none")
-            .attr("stroke", eda_colorScale(experiment))
+            .attr("stroke", eda_colorMapping[experiment])
             .attr("stroke-width", 2)
             .attr("d", d3.line()
                 .x(d => xScale(d.timestamp))
                 .y(d => yScale(d.EDA))
             );
+
+        // 峰值标记修正
+        const maxDataPoint = d3.max(experimentData, d => d.EDA);
+        const peakPoint = experimentData.find(d => d.EDA === maxDataPoint);
+        if (peakPoint) {
+            edachartArea.append("text")
+                .attr("class", "peak-label")
+                .attr("x", xScale(peakPoint.timestamp) + 5)
+                .attr("y", yScale(peakPoint.EDA) - 5)
+                .text("▲ Peak")
+                .style("fill", eda_colorMapping[experiment])
+                .style("font-size", "10px");
+        }
     });
 
-    // ========== Draw Legend ==========
+    // ========== Legend with Toggle ==========
     const legend = edachartArea.selectAll(".legend")
         .data(experiments)
         .enter().append("g")
@@ -206,13 +236,29 @@ function eda_updateChart() {
         .attr("y", 10)
         .attr("width", 15)
         .attr("height", 15)
-        .attr("fill", d => eda_colorScale(d));
+        .attr("fill", d => eda_colorMapping[d]);
 
     legend.append("text")
         .attr("x", 30)
         .attr("y", 20)
         .attr("font-size", "14px")
         .text(d => d);
+
+    // 图例点击交互
+    legend.on("click", function(event, experiment) {
+        const line = edachartArea.selectAll(`.line-${experiment}`);
+        const currentOpacity = line.style("opacity");
+        line.transition().style("opacity", currentOpacity === "0" ? 1 : 0);
+        d3.select(this).classed("inactive", currentOpacity !== "0");
+    });
+
+    // ========== 双击重置 ==========
+    edachartArea.on("dblclick", () => {
+        document.querySelectorAll('.eda-experiment-controls input').forEach(el => el.checked = true);
+        selectedSubjects = ["S01"]; // 重置为默认值
+        document.getElementById("subjectSelect").value = "S01";
+        eda_updateChart();
+    });
 
     // ========== Global Mouse Interaction ==========
     const bisect = d3.bisector(d => d.timestamp).left;
@@ -258,11 +304,14 @@ function eda_updateChart() {
             .style("opacity", 1);
 
         // Collect all experiment data
-        let tooltipContent = `<div class="eda-tooltip-header">Time: ${d3.timeFormat("%M:%S")(closestGlobal.timestamp)}</div>`;
-        let hasData = false;
+        let tooltipContent = `
+            <div class="eda-tooltip-header">Time: ${d3.timeFormat("%M:%S")(closestGlobal.timestamp)}</div>
+            <div class="eda-tooltip-row"><strong>Age:</strong> ${closestGlobal.Age}</div>
+            <div class="eda-tooltip-row"><strong>Gender:</strong> ${closestGlobal.Gender}</div>
+        `;
 
+        let hasData = false;
         experiments.forEach(experiment => {
-            // Find nearest point in respective experiment data
             const experimentData = filteredData.filter(d => d.Experiment === experiment);
             if (experimentData.length === 0) return;
 
@@ -271,14 +320,14 @@ function eda_updateChart() {
             const expNext = experimentData[expIndex] || expPrev;
             const closest = (closestGlobal.timestamp - expPrev.timestamp) > (expNext.timestamp - closestGlobal.timestamp) ? expNext : expPrev;
 
-            // Update data points
+            // Update the data point style
             edachartArea.selectAll(`.eda-point-${experiment}`)
                 .data([closest])
                 .join(
                     enter => enter.append("circle")
                         .attr("class", `eda-data-point eda-point-${experiment}`)
                         .attr("r", 5)
-                        .attr("fill", eda_colorScale(experiment))
+                        .attr("fill", eda_colorMapping[experiment])
                         .attr("cx", xScale(closest.timestamp))
                         .attr("cy", yScale(closest.EDA)),
                     update => update
@@ -290,7 +339,7 @@ function eda_updateChart() {
 
             tooltipContent += `
                 <div class="eda-tooltip-row">
-                    <span class="eda-color-dot" style="background:${eda_colorScale(experiment)}"></span>
+                    <span class="eda-color-dot" style="background:${eda_colorMapping[experiment]}"></span>
                     ${experiment}: ${closest.EDA.toFixed(2)} μS
                 </div>`;
             hasData = true;
@@ -314,3 +363,6 @@ function eda_updateChart() {
     const stats = calculateStats(filteredData);
     updateStatsPanel(stats);
 }
+
+
+

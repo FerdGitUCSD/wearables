@@ -115,7 +115,7 @@ svg {
     margin-right: 8px;
 }
 
-
+/* 参考线样式 */
 .eda-vertical-line {
     stroke-dasharray: 4 2;
     pointer-events: none;
@@ -161,38 +161,77 @@ svg {
 }
 
 
-.card {
-    border-left: 6px solid #3b82f6; /* 左边蓝色边线 */
-    background-color: #f7f8fa; /* 浅灰色背景 */
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    font-family: Arial, sans-serif;
-    color: #333;
-    line-height: 1.6;
-    max-width: 900px;
+
+
+
+#subject-info-panel {
     margin: 20px auto;
-  }
-  
-  .card h2 {
-    color: #444;
-    font-size: 1.6em;
-    margin-bottom: 15px;
-    text-align: left;
-  }
-  
-  .card p, .card li {
-    font-size: 1rem;
-    text-align: left;
-  }
-  
-  .card ul {
-    padding-left: 20px;
-  }
-  
-  .card strong {
+    padding: 15px;
+    max-width: 400px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+#subject-info-panel h3 {
+    margin-bottom: 10px;
+    color: #374151;
+}
+
+.subject-info-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+}
+
+.subject-info-label {
     font-weight: bold;
-  }
-  
+    color: #666;
+}
+
+.subject-info-value {
+    color: #333;
+    font-weight: 500;
+}
 
 
+
+.eda-experiment-controls {
+    margin: 10px 0;
+}
+
+.eda-experiment-controls label {
+    font-weight: normal;
+    margin-right: 15px;
+}
+
+.eda-experiment-controls input {
+    margin-right: 5px;
+    vertical-align: middle;
+}
+
+.eda-stats-grid {
+    margin-top: 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.eda-stat-group {
+    margin-bottom: 15px;
+    padding: 10px;
+    background: white;
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.eda-stat-group h4 {
+    margin: 0 0 10px 0;
+    padding-bottom: 5px;
+    border-bottom: 2px solid #eee;
+}
+
+/* 添加CSS样式 */
+.legend.inactive rect { opacity: 0.3; }
+.legend.inactive text { color: #ccc; }
