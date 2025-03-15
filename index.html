@@ -82,45 +82,22 @@
   
     
     
-  <div class="card">
-    <h2>Electrodermal Activity (EDA) Responses to Stress and Exercise</h2>
-    <p>
-      This interactive visualization shows electrodermal activity (EDA) responses during structured protocols for stress induction, aerobic exercise, and anaerobic exercise. Participants' data are grouped by their physiological sensitivity profiles. Protocols for each visual representation are placed approximately at the onset of the tests. As data represent averaged responses across participants, scales may not align perfectly.
-    </p>
-    <p>
-      Participants displaying high EDA responses, such as S02, S05, and S10, reflect heightened sensitivity and strong activation of the sympathetic nervous system, particularly under stress conditions. Elevated EDA in aerobic and anaerobic exercises similarly indicates increased sympathetic nervous system activity under physical stress.
-    </p>
-    <p>
-      In contrast, participants including S07, f15, and f16 exhibited consistently lower EDA responses across conditions, suggesting a reduced sensitivity to external stimuli or naturally weaker physiological responses.
-    </p>
   
-    <ul>
-      <li><strong>High EDA Response:</strong>Consistently higher EDA responses indicate increased sympathetic nervous system activity, particularly under stress and exercise conditions.</li>
-  
-      <li><strong>Low EDA Response:</strong>Exhibited consistently lower EDA responses across conditions, suggesting reduced sensitivity to external stimuli or weaker physiological responses.</li>
-    
-    </ul>
-  </div>
   
   
   
   <div id="eda1">
     <h2>Electrodermal Activity (EDA) Over Time</h2>
-    <div class="controls">
-        <label for="subjectSelect">Subject Select:</label>
-        <select id="subjectSelect"></select>       
-    </div>
+    <label for="eda-dropdown">Select Experiment:</label>
+    <select id="eda-dropdown"></select> 
 
-    <div class="eda-experiment-controls">
-      <label>Select experiment types to display:</label>
-      <label><input type="checkbox" value="Stress" checked> Stress</label>
-      <label><input type="checkbox" value="Aerobic" checked> Aerobic</label>
-      <label><input type="checkbox" value="Anaerobic" checked> Anaerobic</label>
-    </div>
+    <label for="eda-gender-dropdown">Select Gender:</label>
+    <select id="eda-gender-dropdown">
+      <option value="all">All</option>
+    </select>
     <div id="eda-chart"></div>
-    <div id="eda-stats-panel" class="eda-comparison">
-      <h3>EDA Statistical analysis panel</h3>
-      <div id="eda-stats-grid" class="eda-stats-grid"></div>
+    <div id="eda-tooltip" class="edatooltip" style="position: absolute; opacity: 0; background: lightgray; padding: 5px; border-radius: 5px; pointer-events: none;"></div>
+
   </div>
 
 
@@ -134,7 +111,7 @@
     </div>
   
 <p>This interactive visualization presents time-series temperature data collected from multiple participants across different experimental sessions, allowing users to explore temperature fluctuations over time. 
-  The line chart dynamically updates based on session selection, with each participant represented by a distinct color and an accompanying legend for easy identification, and users can filter by session to compare temperature variations across different conditions. Designed for researchers and analysts, this visualization helps uncover trends, identify patterns, and gain insights into temperature changes in various experimental settings. 
+  The line chart dynamically updates based on session selection, with each participant represented by a distinct color and an accompanying legend for easy identification, and users can filter by session to compare temperature variations across different conditions. Designed for researchers and analysts, this vi
 </p>  
 </body>
 </html>
