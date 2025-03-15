@@ -18,7 +18,7 @@ const fixedYMin = 63;
 const fixedYMax = 140;
 
 // Animation duration in milliseconds
-const animationDuration = 750;
+const animationDuration = 375;
 
 // Time offsets for each condition and protocol (in seconds)
 const timeOffsets = {
@@ -65,6 +65,274 @@ const protocols = {
   "old": "Old Protocol",
   "new": "New Protocol"
 };
+
+
+const manualAnnotations = {
+  "STRESS": {
+    "old": [
+      {
+        time: 463, 
+        HR: 81.7,
+        label: "Stroop Response",
+        description: "This increased heart rate corresponds to the Stroop Test.",
+        color: "#E55934", // Red-orange
+        lineAngle: 255
+      },
+      {
+        time: 721,
+        HR: 73.3,
+        label: "Recovery",
+        description: "Rapid decrease in heart rate during rest phase demonstrates parasympathetic reactivation.",
+        color: "#87CEEB", // Sky blue
+        lineAngle: 135 
+      },
+      {
+        time: 960, 
+        HR: 79.3,
+        label: "TMCT Peak",
+        description: "This increased heart rate corresponds to the Trier Mental Challenge Test, a robust stressor that activates the sympathetic nervous system.",
+        color: "#E55934", // Red-orange
+        lineAngle: 265
+        
+      },
+      {
+        time: 1141,
+        HR: 74.7,
+        label: "Recovery",
+        description: "Rapid decrease in heart rate during rest phase demonstrates parasympathetic reactivation.",
+        color: "#87CEEB", // Sky blue
+        lineAngle: 135 
+      },
+      {
+        time: 1438, 
+        HR: 79.1,
+        label: "Final Tests Peak",
+        description: "This increased heart rate corresponds to both opinion tests as well as the subtract test.",
+        color: "#E55934", // Red-orange
+        lineAngle: 255
+      }
+    ],
+    "new": [
+      {
+        time: 863,
+        HR: 85.5,
+        label: "Stress Response",
+        description: "Heart rate elevation during the TMCT task demonstrates the body's physiological response to cognitive stress.",
+        color: "#FF69B4", // Hot pink
+        lineAngle: 255
+      },
+      {
+        time: 1476,
+        HR: 79.5,
+        label: "Speech Anxiety",
+        description: "The real and opposite opinion tasks triggers a mild stress response as participants articulate personal views on controversial topics.",
+        color: "#9370DB", // Medium purple
+        lineAngle: 285
+      },
+      {
+        time: 2385,
+        HR: 79.1,
+        label: "Subtract Test",
+        description: "The subtract test, which had participants count backwards from 1022 by 13, caused a spike in heart rate.",
+        color: "#E55934", // Red-orange
+        lineAngle: 270
+      },
+    ]
+  },
+  "AEROBIC": {
+    "old": [
+      {
+        time: 810,
+        HR: 88.4,
+        label: "Steady State",
+        description: "This region shows a steady heart rate plateau during moderate intensity exercise, indicating cardiovascular equilibrium.",
+        color: "#4682B4", // Steel blue
+        lineAngle: 250
+      },
+      {
+        time: 990,
+        HR: 94.3,
+        label: "Stress Response",
+        description: "Heart rate steadily increasing as the body adapts to the increasing aerobic stress of cycling.",
+        color: "#E55934", // Red-orange
+        lineAngle: 75
+      },
+      {
+        time: 1656,
+        HR: 124.5,
+        label: "Peak HR",
+        description: "Maximum heart rate occurs during the highest intensity portion of the protocol (110 rpm), representing peak cardiovascular demand.",
+        color: "#E55934", // Red-orange
+        lineAngle: -5
+      },
+      {
+        time: 1820,
+        HR: 101.6,
+        label: "Recovery",
+        description: "Rapid decrease in heart rate during cool down phase demonstrates parasympathetic reactivation.",
+        color: "#87CEEB", // Sky blue
+        lineAngle: 135 
+      }
+    ],
+    "new": [
+      {
+        time: 875,
+        HR: 87,
+        label: "Steady State",
+        description: "This region shows a steady heart rate plateau during moderate intensity exercise, indicating cardiovascular equilibrium.",
+        color: "#4682B4", // Steel blue
+        lineAngle: 250
+      },
+      {
+        time: 1109,
+        HR: 99,
+        label: "Stress Response",
+        description: "Heart rate steadily increasing as the body adapts to the increasing aerobic stress of cycling.",
+        color: "#E55934", // Red-orange
+        lineAngle: 75
+      },
+      {
+        time: 1871,
+        HR: 119.1,
+        label: "Peak HR",
+        description: "Maximum heart rate occurs during the highest intensity portion of the protocol (110 rpm), representing peak cardiovascular demand.",
+        color: "#E55934", // Red-orange
+        lineAngle: 175
+      },
+      {
+        time: 2082,
+        HR: 101.3,
+        label: "Recovery",
+        description: "Rapid decrease in heart rate during cool down phase demonstrates parasympathetic reactivation.",
+        color: "#87CEEB", // Sky blue
+        lineAngle: 135 
+      }
+    ]
+  },
+  "ANAEROBIC": {
+    "old": [
+      {
+        time: 210,
+        HR: 91.5,
+        label: "Sprint 1",
+        description: "First anaerobic sprint causes rapid heart rate elevation due to maximum effort and anaerobic energy production.",
+        color: "#E55934", // Red-orange
+        lineAngle: 215
+      },
+      {
+        time: 870,
+        HR: 102.4,
+        label: "Recovery",
+        description: "Heart rate decreases during the final cool down period as the body begins clearing lactate.",
+        color: "#87CEEB", // Sky blue
+        lineAngle: -35
+      },
+      {
+        time: 480,
+        HR: 97.9,
+        label: "Sprint 2",
+        description: "Second sprint peak shows slightly higher heart rate as fatigue begins to accumulate.",
+        color: "#E55934", // Red-orange
+        lineAngle: 200
+      },
+      {
+        time: 704,
+        HR: 120.7,
+        label: "Peak Intensity",
+        description: "Heart rate reaches maximum during the final sprint, approaching the anaerobic threshold.",
+        color: "#E55934", // Red-orange
+        lineAngle: 160
+      }
+    ],
+    "new": [
+      {
+        time: 1140,
+        HR: 91.7,
+        label: "Warm-up",
+        description: "Initial heart rate increase as body prepares for exercise, with increased blood flow to working muscles.",
+        color: "#F5B850" // Orange
+      },
+      {
+        time: 1243,
+        HR: 107.9,
+        label: "Sprint 1",
+        description: "First anaerobic sprint causes rapid heart rate elevation due to maximum effort and anaerobic energy production.",
+        color: "#E55934", // Red-orange
+        lineAngle: 225
+      },
+      {
+        time: 1490,
+        HR: 104.2,
+        label: "Recovery",
+        description: "Heart rate decreases during the first cool down period as the body begins clearing lactate.",
+        color: "#87CEEB", // Sky blue
+        lineAngle: 45
+      },
+      {
+        time: 2091,
+        HR: 107.8,
+        label: "Sprint 4",
+        description: "Fourth sprint peak shows decreased heart rate  peaks fatigue hits its maximum.",
+        color: "#E55934", // Red-orange
+        lineAngle: 315
+      },
+      {
+        time: 1780,
+        HR: 119.1,
+        label: "Peak Intensity",
+        description: "Heart rate reaches maximum during the third sprint, approaching the anaerobic threshold.",
+        color: "#E55934", // Red-orange
+        lineAngle: 195
+      }
+    ]
+  }
+};
+
+function applyManualAnnotations(condition, protocol, data) {
+  // Get annotation config for this condition and protocol
+  const annotations = manualAnnotations[condition]?.[protocol] || [];
+  
+  if (annotations.length === 0) {
+    return [];
+  }
+  
+  // Process each annotation
+  return annotations.map(annotation => {
+    let hr = annotation.HR;
+    
+    // If HR is null or undefined, try to find the actual HR value at this time
+    if (hr === null || hr === undefined) {
+      // Find the closest data point to the specified time
+      const closestPoint = findClosestDataPoint(data, annotation.time);
+      if (closestPoint) {
+        hr = closestPoint.HR;
+      } else {
+        // Default fallback if no data point found
+        hr = 100;
+      }
+    }
+    
+    // Create a new object with all properties from the original annotation
+    return {
+      ...annotation, // Copy ALL properties from original annotation
+      HR: hr         // Override HR if it was auto-determined
+    };
+  });
+}
+
+// Helper function to find closest data point to a given time
+function findClosestDataPoint(data, targetTime) {
+  if (!data || data.length === 0) return null;
+  
+  // Sort by how close the time is to the target
+  const sortedByProximity = [...data].sort((a, b) => {
+    return Math.abs(a.time - targetTime) - Math.abs(b.time - targetTime);
+  });
+  
+  // Return the closest point
+  return sortedByProximity[0];
+}
+
 
 // Information about each segment type
 const segmentDescriptions = {
@@ -915,7 +1183,8 @@ function createChartForCondition(condition) {
     };
 }
 
-// Function to detect and add annotations for interesting features
+// Function to add feature annotations - modified to use manual annotations
+// Function to add feature annotations - modified to use manual annotations
 function addFeatureAnnotations(condition, protocol, avgData) {
   const { annotationsGroup, xScale, yScale } = svgContainers[condition];
   
@@ -925,8 +1194,16 @@ function addFeatureAnnotations(condition, protocol, avgData) {
   // Skip if no data
   if (!avgData || avgData.length === 0) return;
   
-  // Find interesting features
-  const features = detectInterestingFeatures(condition, protocol, avgData);
+  // Get manual annotations for this condition and protocol
+  let features = [];
+  
+  // If manual annotations are defined, use those
+  if (manualAnnotations[condition] && manualAnnotations[condition][protocol]) {
+    features = applyManualAnnotations(condition, protocol, avgData);
+  } else {
+    // Fall back to auto-detection if no manual annotations are defined
+    features = detectInterestingFeatures(condition, protocol, avgData);
+  }
   
   // Add annotations for each feature
   features.forEach((feature, i) => {
@@ -942,24 +1219,55 @@ function addFeatureAnnotations(condition, protocol, avgData) {
       .attr("stroke", feature.color)
       .attr("stroke-width", 2);
     
-    // Add connecting line
-    const lineDirection = i % 2 === 0 ? -1 : 1; // Alternate direction
+    // Calculate line angle (in radians) - default alternates left/right
+    const defaultLineDirection = i % 2 === 0 ? -1 : 1; // Alternate direction
+    // Use lineAngle from feature if provided, otherwise use default direction
+    const lineAngle = feature.lineAngle !== undefined 
+      ? (feature.lineAngle * Math.PI / 180) // Convert degrees to radians
+      : (defaultLineDirection > 0 ? 0 : Math.PI); // 0 radians is right, PI radians is left
+    
+    // Calculate line end point
+    const lineLength = 50;
+    const lineEndX = Math.cos(lineAngle) * lineLength;
+    const lineEndY = Math.sin(lineAngle) * lineLength;
+    
+    // Add connecting line with specified angle
     annotationGroup.append("line")
       .attr("x1", 0)
       .attr("y1", 0)
-      .attr("x2", lineDirection * 50)
-      .attr("y2", -20)
+      .attr("x2", lineEndX)
+      .attr("y2", lineEndY)
       .attr("stroke", feature.color)
       .attr("stroke-width", 1)
       .attr("stroke-dasharray", "3,3");
     
-    // Add text label
+    // Determine text anchor based on line angle
+    // If line points right (angle between -90 and 90 degrees), text starts at end
+    // If line points left (angle outside that range), text ends at end
+    const isPointingRight = Math.cos(lineAngle) >= 0;
+    const textAnchor = isPointingRight ? "start" : "end";
+    
+    // Small offset to prevent text from touching the line
+    const textOffsetX = isPointingRight ? 5 : -5;
+    
+    // Calculate text position
+    const textX = lineEndX + textOffsetX;
+    const textY = lineEndY;
+    
+    // Add text label with rotation around its position
     annotationGroup.append("text")
-      .attr("x", lineDirection * 50 + (lineDirection > 0 ? 5 : -5))
-      .attr("y", -20)
-      .attr("text-anchor", lineDirection > 0 ? "start" : "end")
+      .attr("x", textX)
+      .attr("y", textY)
+      .attr("text-anchor", textAnchor)
       .attr("alignment-baseline", "middle")
       .attr("fill", feature.color)
+      .attr("transform", function() {
+        // Only apply rotation if specified
+        const angle = feature.textAngle || 0;
+        if (angle === 0) return null;
+        // Rotate around the text position
+        return `rotate(${angle},${textX},${textY})`;
+      })
       .style("font-size", "10px")
       .style("font-weight", "bold")
       .text(feature.label);
@@ -981,6 +1289,24 @@ function addFeatureAnnotations(condition, protocol, avgData) {
           .attr("r", 5);
       });
   });
+}
+
+// Function to show feature description - unchanged
+function showFeatureDescription(feature) {
+  const infoPanel = document.getElementById("segment-info-panel");
+  const contentDiv = infoPanel.querySelector(".info-content");
+  
+  contentDiv.innerHTML = `
+    <h3>${feature.label}</h3>
+    <div class="feature-hr">Heart Rate: ${feature.HR.toFixed(1)} bpm</div>
+    <div class="feature-time">Time: ${Math.floor(feature.time / 60)}:${(feature.time % 60).toString().padStart(2, '0')}</div>
+    <div class="feature-indicator" style="background-color: ${feature.color};"></div>
+    <div class="feature-description">
+      <p>${feature.description}</p>
+    </div>
+  `;
+  
+  infoPanel.style.display = "block";
 }
 
 // Function to detect interesting features in the data
@@ -1173,23 +1499,7 @@ function smoothData(data, windowSize) {
   return result;
 }
 
-// Function to show feature description
-function showFeatureDescription(feature) {
-  const infoPanel = document.getElementById("segment-info-panel");
-  const contentDiv = infoPanel.querySelector(".info-content");
-  
-  contentDiv.innerHTML = `
-    <h3>${feature.label}</h3>
-    <div class="feature-hr">Heart Rate: ${feature.HR.toFixed(1)} bpm</div>
-    <div class="feature-time">Time: ${Math.floor(feature.time / 60)}:${(feature.time % 60).toString().padStart(2, '0')}</div>
-    <div class="feature-indicator" style="background-color: ${feature.color};"></div>
-    <div class="feature-description">
-      <p>${feature.description}</p>
-    </div>
-  `;
-  
-  infoPanel.style.display = "block";
-}
+
 
 function updateChart(allData, condition, protocol) {
   // Skip if no data
@@ -1526,7 +1836,7 @@ function addIntroductionSection() {
     <ul class="explore">
       <li><strong>Hovering</strong> over the chart to see detailed heart rate data and physiological context</li>
       <li><strong>Clicking</strong> on timeline segments to learn more details about each protocol phase</li>
-      <li><strong>Examining</strong> the annotated features that highlight key physiological responses</li>
+      <li><strong>Clicking</strong> the annotated features that highlight key physiological responses</li>
     </ul>
   `;
   
