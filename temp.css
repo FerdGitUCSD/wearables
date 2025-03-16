@@ -42,8 +42,8 @@
     z-index: 100;
 }
 
-#legend {
-    position: absolute;
+/* #legend {
+    position: fixed;
     top: 40px;
     right: 20px;
     background-color: rgba(255, 255, 255, 0.8);
@@ -52,6 +52,66 @@
     border: 1px solid #ddd;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     font-size: 14px;
+} */
+
+#activity-legend {
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #f8f8f8;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    max-width: 900px; /* Match the chart width */
+    font-family: Arial, sans-serif;
+}
+
+.legend-title {
+    font-weight: bold;
+    font-size: 16px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 5px;
+}
+
+.legend-description {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 10px;
+}
+
+.legend-label {
+    display: flex;
+    align-items: center;
+    margin: 12px 0;
+    padding: 8px;
+    background-color: rgba(240, 240, 240, 0.5);
+    border-left: 4px solid;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.legend-label input {
+    margin-right: 10px;
+    transform: scale(1.2);
+    cursor: pointer;
+}
+
+.legend-label .color-indicator {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    margin-right: 8px;
+    border-radius: 2px;
+}
+
+.legend-label .condition-name {
+    font-weight: bold;
+}
+
+.legend-label .condition-description {
+    font-size: 11px;
+    color: #666;
+    margin-left: 20px;
+    margin-top: 3px;
 }
 
 #play-button, #reset-button {
@@ -83,7 +143,7 @@
 
 input[type=range] {
     height: 25px;
-    -webkit-appearance: none;
+    /* -webkit-appearance: none; */
     margin: 10px 0;
     width: 200px;
     background: transparent;

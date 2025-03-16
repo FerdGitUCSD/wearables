@@ -45,7 +45,7 @@ d3.csv('data/combined_temperature_data2.csv').then(function(data) {
     };
 
     // Set up SVG container for thermometer view
-    const margin = { top: 40, right: 200, bottom: 50, left: 100 };
+    const margin = { top: 20, right: 200, bottom: 100, left: 100 }; // Increased bottom margin
     const width = 900 - margin.left - margin.right;
     const height = 600 - margin.top - margin.bottom;
 
@@ -78,22 +78,21 @@ d3.csv('data/combined_temperature_data2.csv').then(function(data) {
         .domain([30, 35]) // Temperature range from your original scale
         .range([thermHeight, 0]);
     
-    // Create axes
     const timeAxis = svg.append('g')
-        .attr('class', 'x-axis')
-        .attr('transform', `translate(0,${height - 50})`)
-        .call(d3.axisBottom(timeScale));
+    .attr('class', 'x-axis')
+    .attr('transform', `translate(0,${height + 30})`) // Move x-axis down by increasing y-value
+    .call(d3.axisBottom(timeScale));
     
     svg.append('text')
-        .attr('transform', `translate(${width / 2},${height})`)
+        .attr('transform', `translate(${width / 2},${height + 65})`)
         .style('text-anchor', 'middle')
         .text('Time (seconds)');
         
     // Add thermometer background
     const thermGroup = svg.append('g')
         .attr('class', 'thermometer')
-        .attr('transform', `translate(${width/2 - thermWidth/2}, 10)`);
-    
+        .attr('transform', `translate(${width / 2 - thermWidth / 2}, 10)`); // Adjusted y-position
+
     // Thermometer bulb with better visual style
     thermGroup.append('circle')
         .attr('cx', thermWidth / 2)
@@ -131,15 +130,6 @@ d3.csv('data/combined_temperature_data2.csv').then(function(data) {
         .attr('rx', tubeWidth * 0.1)
         .attr('fill', 'white')
         .attr('opacity', 0.3);
-        
-    // Add title to the thermometer
-    svg.append('text')
-        .attr('x', width/2)
-        .attr('y', 0)
-        .attr('text-anchor', 'middle')
-        .attr('font-size', '18px')
-        .attr('font-weight', 'bold')
-        .text('Body Temperature Response');
     
     // Temperature scale on thermometer with improved readability
     const tempTicks = tempScale.ticks(10);
@@ -151,7 +141,7 @@ d3.csv('data/combined_temperature_data2.csv').then(function(data) {
     tempAxisGroup.append('text')
         .attr('transform', 'rotate(-90)')
         .attr('x', -thermHeight/2)
-        .attr('y', -30)
+        .attr('y', -100)
         .attr('text-anchor', 'middle')
         .attr('font-size', '14px')
         .attr('font-weight', 'bold')
@@ -399,17 +389,17 @@ d3.csv('data/combined_temperature_data2.csv').then(function(data) {
                 const bulbMercury = mercuryElements[condition].bulb;
                 
                 mercury.transition()
-                      .duration(animationSpeed * 0.8) // Make transition slightly faster than animation speed
-                      .attr('y', tempScale(temp))
-                      .attr('height', mercuryHeight)
-                      .attr('opacity', 1);
+                        .duration(animationSpeed * 0.8) // Make transition slightly faster than animation speed
+                        .attr('y', tempScale(temp))
+                        .attr('height', mercuryHeight)
+                        .attr('opacity', 1);
                 
                 bulbMercury.attr('opacity', 1);
                 
                 // Update temperature value display
                 d3.select('#temp-value')
-                  .text(`${temp.toFixed(2)}°C`)
-                  .style('color', getTemperatureColor(temp));
+                    .text(`${temp.toFixed(2)}°C`)
+                    .style('color', getTemperatureColor(temp));
                 
                 // Update phase highlight if we have exactly one session selected
                 if (selectedSessions.length === 1) {
@@ -587,106 +577,238 @@ function getPhaseDescription(phaseName) {
         .style('font-weight', 'bold')
         .style('font-size', '16px');
     
-    // Create an enhanced legend for condition selection
-    const legend = d3.select("#legend")
-        .style('padding', '15px')
-        .style('background-color', 'rgba(255, 255, 255, 0.9)')
-        .style('border-radius', '8px')
-        .style('border', '1px solid #ddd')
-        .style('box-shadow', '0 2px 8px rgba(0,0,0,0.1)')
-        .style('max-width', '250px');
-    
-    // Add legend title
-    legend.append('div')
-        .style('font-weight', 'bold')
-        .style('font-size', '16px')
-        .style('margin-bottom', '10px')
-        .style('border-bottom', '1px solid #ddd')
-        .style('padding-bottom', '5px')
-        .text('Activity Types');
-    
-    // Add description
-    legend.append('div')
-        .style('font-size', '12px')
-        .style('margin-bottom', '10px')
-        .style('color', '#666')
-        .text('Select one or more activities to compare temperature responses:');
-    
-    // Create condition descriptions
+
+    // Create the legend container
+    const legend = d3.select("#activity-legend");
     const conditionDescriptions = {
         'AEROBIC': 'Steady-state cardio exercise',
         'ANAEROBIC': 'High-intensity interval training',
         'STRESS': 'Mental stress test activities'
-    };
-    
-    // Add checkboxes for each condition with better styling
-    conditions.forEach(condition => {
-        const conditionContainer = legend.append('div')
-            .style('margin', '12px 0')
-            .style('padding', '8px')
-            .style('border-radius', '4px')
-            .style('background-color', 'rgba(240, 240, 240, 0.5)')
-            .style('border-left', `4px solid ${colorScale(condition)}`);
+    };    
+
+    // Add checkboxes for each condition
+    conditions.forEach((condition) => {
+        // Create container without click handler initially
+        const conditionContainer = legend.append("div")
+            .attr("class", "legend-label")
+            .style("border-left-color", colorScale(condition));
         
-        const label = conditionContainer.append('label')
-            .style('display', 'flex')
-            .style('align-items', 'center')
-            .style('cursor', 'pointer');
+        // Create the checkbox input
+        const checkbox = conditionContainer.append("input")
+            .attr("type", "checkbox")
+            .attr("id", `checkbox-${condition}`)
+            .property("checked", true); // Initially checked
         
-        label.append('input')
-            .attr('type', 'checkbox')
-            .attr('id', `checkbox-${condition}`)
-            .property('checked', true)
-            .style('margin-right', '10px')
-            .style('transform', 'scale(1.2)')
-            .on('change', function() {
-                // Update selected sessions based on checkbox state
-                selectedSessions = conditions.filter(c => 
-                    d3.select(`#checkbox-${c}`).property('checked'));
-                
-                // Update visibility of mercury for each condition
-                conditions.forEach(c => {
-                    const isSelected = selectedSessions.includes(c);
-                    mercuryElements[c].tube
-                        .transition()
-                        .duration(300)
-                        .attr('opacity', isSelected ? 1 : 0);
-                    
-                    mercuryElements[c].bulb
-                        .transition()
-                        .duration(300)
-                        .attr('opacity', isSelected ? 1 : 0);
-                });
-                
-                // Update phase highlight if needed
-                if (selectedSessions.length === 1) {
-                    updatePhaseHighlight(selectedSessions[0], currentTime);
-                } else {
-                    svg.selectAll('.phase-highlight').remove();
-                }
-                
-                // Update current phase info
-                updateThermometer(currentTime);
-            });
-        
-        // Add condition name with color indicator
-        const nameContainer = label.append('div')
-            .style('flex-grow', '1');
-        
-        nameContainer.append('div')
-            .style('font-weight', 'bold')
-            .style('display', 'flex')
-            .style('align-items', 'center')
-            .html(`<span style="display:inline-block; width:12px; height:12px; background-color:${colorScale(condition)}; margin-right:8px; border-radius:2px;"></span> ${condition}`);
-        
+        // Add color indicator
+        conditionContainer.append("div")
+            .attr("class", "color-indicator")
+            .style("background-color", colorScale(condition));
+
+        // Add condition name
+        conditionContainer.append("div")
+            .attr("class", "condition-name")
+            .text(condition);
+
         // Add condition description
-        nameContainer.append('div')
-            .style('font-size', '11px')
-            .style('color', '#666')
-            .style('margin-top', '3px')
-            .style('margin-left', '20px')
-            .text(conditionDescriptions[condition] || '');
+        conditionContainer.append("div")
+            .attr("class", "condition-description")
+            .text(conditionDescriptions[condition] || "");
+        
+        // Add event listener to the checkbox using standard DOM methods
+        // This ensures better compatibility with checkbox default behavior
+        document.getElementById(`checkbox-${condition}`).addEventListener('change', function(event) {
+            // Stop the event from bubbling up to the container
+            event.stopPropagation();
+            
+            // Update the selection based on the checkbox state
+            updateSelection(condition, this.checked);
+        });
+        
+        // Add event listener to the container using standard DOM
+        conditionContainer.node().addEventListener('click', function(event) {
+            // Ignore clicks on the checkbox itself
+            if (event.target.tagName === 'INPUT') {
+                return;
+            }
+            
+            // Get the checkbox
+            const checkboxElem = document.getElementById(`checkbox-${condition}`);
+            
+            // Toggle the checkbox
+            checkboxElem.checked = !checkboxElem.checked;
+            
+            // Create and dispatch a change event on the checkbox
+            const changeEvent = new Event('change');
+            checkboxElem.dispatchEvent(changeEvent);
+        });
     });
+
+    // Function to update selection
+    function updateSelection(condition, isSelected) {
+        if (isSelected) {
+            selectedSessions.push(condition);
+        } else {
+            selectedSessions = selectedSessions.filter((c) => c !== condition);
+        }
+
+        // Update visibility of mercury for each condition
+        conditions.forEach((c) => {
+            const isSelected = selectedSessions.includes(c);
+            mercuryElements[c].tube
+                .transition()
+                .duration(300)
+                .attr("opacity", isSelected ? 1 : 0);
+
+            mercuryElements[c].bulb
+                .transition()
+                .duration(300)
+                .attr("opacity", isSelected ? 1 : 0);
+        });
+
+        // Update phase highlight if needed
+        if (selectedSessions.length === 1) {
+            updatePhaseHighlight(selectedSessions[0], currentTime);
+        } else {
+            svg.selectAll(".phase-highlight").remove();
+        }
+
+        // Update current phase info
+        updateThermometer(currentTime);
+    }
+    // // Create an enhanced legend for condition selection inside the SVG
+    // const legend = svg.append('g')
+    // .attr('class', 'legend')
+    // .attr('transform', `translate(${width - 200}, 20)`); // Adjust the position as needed
+
+    // // Add legend title
+    // legend.append('text')
+    // .attr('x', 0)
+    // .attr('y', 0)
+    // .attr('font-weight', 'bold')
+    // .attr('font-size', '16px')
+    // .text('Activity Types');
+
+    // // Add description
+    // legend.append('text')
+    // .attr('x', 0)
+    // .attr('y', 20)
+    // .attr('font-size', '12px')
+    // .attr('fill', '#666')
+    // .text('Select one or more activities to compare temperature responses:');
+
+    // // Create condition descriptions
+    // const conditionDescriptions = {
+    // 'AEROBIC': 'Steady-state cardio exercise',
+    // 'ANAEROBIC': 'High-intensity interval training',
+    // 'STRESS': 'Mental stress test activities'
+    // };
+
+    // // Add checkboxes for each condition with visual feedback
+    // conditions.forEach((condition, i) => {
+    //     const conditionContainer = legend.append('g')
+    //         .attr('transform', `translate(0, ${40 + i * 40})`); // Adjust spacing as needed
+
+    //     const label = conditionContainer.append('g')
+    //         .attr('class', 'legend-label')
+    //         .attr('cursor', 'pointer')
+    //         .on('click', function () {
+    //             const checkbox = d3.select(this).select('.checkbox');
+    //             const isChecked = checkbox.classed('checked');
+
+    //             // Toggle the checked state
+    //             checkbox.classed('checked', !isChecked);
+
+    //             // Update the selection
+    //             updateSelection(condition, !isChecked);
+    //         });
+
+    //     // Add checkbox (as a rectangle)
+    //     label.append('rect')
+    //     .attr('class', 'checkbox')
+    //     .attr('x', 0)
+    //     .attr('y', 0)
+    //     .attr('width', 15)
+    //     .attr('height', 15)
+    //     .attr('fill', '#fff')
+    //     .attr('stroke', '#000')
+    //     .attr('stroke-width', 1);
+
+    //     // Add checkmark (hidden by default)
+    //     label.append('text')
+    //         .attr('class', 'checkmark')
+    //         .attr('x', 3)
+    //         .attr('y', 13)
+    //         .attr('font-size', '14px')
+    //         .attr('fill', '#000')
+    //         .text('✓') // Checkmark symbol
+    //         .style('visibility', 'hidden'); // Initially hidden
+
+    //     // Add condition name with color indicator
+    //     label.append('rect')
+    //         .attr('x', 20)
+    //         .attr('y', 2)
+    //         .attr('width', 12)
+    //         .attr('height', 12)
+    //         .attr('fill', colorScale(condition))
+    //         .attr('rx', 2);
+
+    //     label.append('text')
+    //         .attr('x', 40)
+    //         .attr('y', 12)
+    //         .attr('font-weight', 'bold')
+    //         .text(condition);
+
+    //     // Add condition description
+    //     label.append('text')
+    //         .attr('x', 40)
+    //         .attr('y', 28)
+    //         .attr('font-size', '11px')
+    //         .attr('fill', '#666')
+    //         .text(conditionDescriptions[condition] || '');
+    // });
+
+    // // Function to update checkbox appearance
+    // function toggleCheckbox(checkbox, isChecked) {
+    //     checkbox.classed('checked', isChecked);
+
+    //     // Show/hide the checkmark
+    //     checkbox.attr('fill', isChecked ? '#00CC00' : '#fff'); // Green when checked, white when unchecked
+    // }
+
+    // // Function to update selection
+    // function updateSelection(condition, isSelected) {
+    //     if (isSelected) {
+    //         selectedSessions.push(condition);
+    //     } else {
+    //         selectedSessions = selectedSessions.filter(c => c !== condition);
+    //     }
+
+    //     // Update visibility of mercury for each condition
+    //     conditions.forEach(c => {
+    //         const isSelected = selectedSessions.includes(c);
+    //         mercuryElements[c].tube
+    //             .transition()
+    //             .duration(300)
+    //             .attr('opacity', isSelected ? 1 : 0);
+
+    //         mercuryElements[c].bulb
+    //             .transition()
+    //             .duration(300)
+    //             .attr('opacity', isSelected ? 1 : 0);
+    //     });
+
+    //     // Update phase highlight if needed
+    //     if (selectedSessions.length === 1) {
+    //         updatePhaseHighlight(selectedSessions[0], currentTime);
+    //     } else {
+    //         svg.selectAll('.phase-highlight').remove();
+    //     }
+
+    //     // Update current phase info
+    //     updateThermometer(currentTime);
+    // }
+    
+
     
     // Add a compare button to quickly toggle between single/multiple selection
     legend.append('button')

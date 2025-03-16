@@ -94,10 +94,14 @@
 
 
   
-    <h2>Temperature Over Time (Line Chart)</h2>
-    <p>Try select single session!</p>
+    <h2>Temperature Over Time</h2>
     <div id="chart-container">
-      <div id="legend"></div> <!-- For condition selection -->
+          <!-- Legend Container -->
+        <div id="activity-legend">
+          <div class="legend-title">Activity Types</div>
+          <div class="legend-description">Select one or more activities to compare temperature responses:</div>
+          <!-- Checkboxes will be added here dynamically -->
+        </div>
       <svg id="temp-chart"></svg>
       <div id="summary-stats"></div> <!-- Summary stats below the plot -->
     </div>
