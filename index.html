@@ -39,7 +39,6 @@
       <h2>Blood Volume Pulse (BVP) Over Time</h2>
       <div class="control-panel">
         <div class="control-row">
-          
           <div id="time-display">Current Time: 0.00s</div>
           <div id="stress-prediction">Stress Prediction: N/A</div>
           <button id="predict-btn">Predict Stress</button>
@@ -64,13 +63,15 @@
           </div>
         </div>
       </div>
-    
-      <div id="bvp-chart"></div>
-      <div id="tooltip-bvp" class="tooltip"></div>
+      
+      <div id="bvp-container" style="position: relative;">
+        <div id="bvp-chart"></div>
+        <div id="tooltip-bvp" class="tooltip"></div>
+        <!-- The statistics panel will be dynamically inserted here -->
+      </div>
     </div>
     <p>Blood Volume Pulse (BVP) measures changes in blood flow through your arteries and veins. The data reveals consistent patterns in BVP measurements across most participants throughout the day, and provides a baseline for understanding typical cardiovascular response during various activities. But we observe significant spikes during certain activity periods, particularly during exercise or stress, which deviate from the baseline pattern. Therefore, monitoring these BVP variations could help users identify periods of cardiovascular stress and potentially adjust their activities to maintain healthier cardiovascular patterns.
     </p>
-  
     
     
   

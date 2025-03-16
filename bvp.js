@@ -219,6 +219,289 @@ svg.append("rect")
     })
     .on("mouseout", () => tooltip.style("opacity", 0));
 
+    function addTrendLine(data) {
+        // Remove any existing trendline
+        svg.selectAll(".trend-line").remove();
+        
+        if (data.length < 2) return; // Need at least 2 points
+        
+        // Simple linear regression for trendline
+        let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+        let n = data.length;
+        
+        data.forEach(d => {
+            sumX += d.time_s;
+            sumY += d.bvp;
+            sumXY += d.time_s * d.bvp;
+            sumX2 += d.time_s * d.time_s;
+        });
+        
+        const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+        const intercept = (sumY - slope * sumX) / n;
+        
+        // Create trendline data
+        const timeExtent = d3.extent(data, d => d.time_s);
+        const trendData = [
+            { time_s: timeExtent[0], bvp: slope * timeExtent[0] + intercept },
+            { time_s: timeExtent[1], bvp: slope * timeExtent[1] + intercept }
+        ];
+        
+        // Draw the trendline
+        svg.append("path")
+            .datum(trendData)
+            .attr("class", "trend-line")
+            .attr("fill", "none")
+            .attr("stroke", "#ff6600")
+            .attr("stroke-width", 2)
+            .attr("stroke-dasharray", "6,3")
+            .attr("d", d3.line()
+                .x(d => xScale(d.time_s))
+                .y(d => yScale(d.bvp))
+            );
+        
+        // Add trendline label
+        svg.append("text")
+            .attr("class", "trend-line")
+            .attr("x", xScale(timeExtent[1]) - 120)
+            .attr("y", yScale(trendData[1].bvp) - 10)
+            .attr("fill", "#ff6600")
+            .attr("font-weight", "bold")
+            .attr("font-size", "12px")
+            .text(`Trend: ${slope > 0 ? "Rising" : "Falling"} (${slope.toFixed(4)})`);
+        
+        // Return the trend data for statistics
+        return { slope, intercept };
+    }
+    
+    // Create statistics panel in HTML
+    function createStatisticsPanel() {
+        const statsPanel = d3.select("#bvp-container")
+            .append("div")
+            .attr("id", "stats-panel")
+            .style("position", "absolute")
+            .style("top", "10px")
+            .style("right", "10px")
+            .style("background-color", "rgba(255, 255, 255, 0.9)")
+            .style("border", "1px solid #ddd")
+            .style("border-radius", "5px")
+            .style("padding", "10px")
+            .style("box-shadow", "0 2px 6px rgba(0,0,0,0.1)")
+            .style("width", "250px")
+            .style("max-height", "300px")
+            .style("overflow-y", "auto")
+            .style("font-size", "12px");
+        
+        // Create header
+        statsPanel.append("div")
+            .attr("class", "stats-header")
+            .style("display", "flex")
+            .style("justify-content", "space-between")
+            .style("align-items", "center")
+            .style("margin-bottom", "5px")
+            .style("border-bottom", "1px solid #ddd")
+            .style("padding-bottom", "5px");
+        
+        // Add title
+        statsPanel.select(".stats-header")
+            .append("h3")
+            .style("margin", "0")
+            .style("font-size", "14px")
+            .style("font-weight", "bold")
+            .text("BVP Statistics");
+        
+        // Add minimize/maximize button
+        statsPanel.select(".stats-header")
+            .append("button")
+            .attr("id", "stats-toggle")
+            .style("background", "none")
+            .style("border", "none")
+            .style("cursor", "pointer")
+            .style("padding", "0")
+            .style("font-weight", "bold")
+            .text("−")
+            .on("click", function() {
+                const statsContent = d3.select("#stats-content");
+                const isVisible = statsContent.style("display") !== "none";
+                
+                statsContent.style("display", isVisible ? "none" : "block");
+                d3.select(this).text(isVisible ? "+" : "−");
+            });
+        
+        // Create content container
+        statsPanel.append("div")
+            .attr("id", "stats-content");
+        
+        // Create the actual stats content
+        const statsContent = d3.select("#stats-content");
+        
+        // Basic stats table
+        statsContent.append("table")
+            .attr("id", "basic-stats")
+            .style("width", "100%")
+            .style("border-collapse", "collapse")
+            .style("margin-bottom", "10px");
+        
+        // Advanced stats section
+        statsContent.append("div")
+            .attr("class", "advanced-stats")
+            .style("margin-top", "10px");
+        
+        return statsPanel;
+    }
+    
+    // Update statistics function
+    function updateStatistics(filteredData) {
+        if (!d3.select("#stats-panel").size()) {
+            createStatisticsPanel();
+        }
+        
+        if (filteredData.length === 0) return;
+        
+        // Calculate basic statistics
+        const bvpValues = filteredData.map(d => d.bvp);
+        const stats = {
+            min: d3.min(bvpValues),
+            max: d3.max(bvpValues),
+            mean: d3.mean(bvpValues),
+            median: d3.median(bvpValues),
+            std: d3.deviation(bvpValues) || 0,
+            count: filteredData.length,
+            phase: filteredData[0].phase
+        };
+        
+        // Calculate time range
+        const timeExtent = d3.extent(filteredData, d => d.time_s);
+        stats.timeRange = timeExtent[1] - timeExtent[0];
+        
+        // Calculate trend information
+        const trendInfo = updateTrendLineOnly(filteredData);
+        stats.trend = trendInfo ? trendInfo.slope : 0;
+        
+        // Calculate zero-crossings (a measure of oscillation)
+        let zeroCrossings = 0;
+        let prevSign = Math.sign(bvpValues[0]);
+        for (let i = 1; i < bvpValues.length; i++) {
+            const currentSign = Math.sign(bvpValues[i]);
+            if (currentSign !== 0 && prevSign !== 0 && currentSign !== prevSign) {
+                zeroCrossings++;
+            }
+            if (currentSign !== 0) prevSign = currentSign;
+        }
+        stats.zeroCrossings = zeroCrossings;
+        
+        // Calculate volatility (moving standard deviation)
+        const windowSize = Math.min(20, Math.floor(bvpValues.length / 4));
+        let volatilities = [];
+        for (let i = windowSize; i < bvpValues.length; i++) {
+            const window = bvpValues.slice(i - windowSize, i);
+            volatilities.push(d3.deviation(window) || 0);
+        }
+        stats.volatility = d3.mean(volatilities) || 0;
+        
+        // Update the statistics table
+        const table = d3.select("#basic-stats");
+        
+        // Clear table
+        table.html("");
+        
+        // Add table rows with data
+        const rows = [
+            { label: "Data Points", value: stats.count.toLocaleString() },
+            { label: "Current Phase", value: stats.phase, 
+              color: getPhaseColor(stats.phase) },
+            { label: "Min BVP", value: stats.min.toFixed(3) },
+            { label: "Max BVP", value: stats.max.toFixed(3) },
+            { label: "Mean BVP", value: stats.mean.toFixed(3) },
+            { label: "Median BVP", value: stats.median.toFixed(3) },
+            { label: "Std Deviation", value: stats.std.toFixed(3) },
+            { label: "Time Range", value: `${stats.timeRange.toFixed(2)}s` },
+            { label: "Trend", value: `${stats.trend.toFixed(4)} ${stats.trend > 0 ? "↗" : "↘"}`, 
+              color: stats.trend > 0 ? "#00aa44" : "#dd4444" },
+            { label: "Volatility", value: stats.volatility.toFixed(3) }
+        ];
+        
+        rows.forEach(row => {
+            const tr = table.append("tr")
+                .style("border-bottom", "1px solid #eee");
+            
+            tr.append("td")
+                .style("padding", "3px 5px")
+                .style("font-weight", "bold")
+                .text(row.label);
+            
+            tr.append("td")
+                .style("padding", "3px 5px")
+                .style("text-align", "right")
+                .style("color", row.color || "inherit")
+                .style("font-weight", row.color ? "bold" : "normal")
+                .text(row.value);
+        });
+        
+        // Update advanced stats
+        const advancedStats = d3.select(".advanced-stats");
+        advancedStats.html("");
+        
+        // Add a mini sparkline of recent values
+        const sparklineContainer = advancedStats.append("div")
+            .attr("class", "sparkline-container")
+            .style("margin-top", "10px");
+        
+        sparklineContainer.append("h4")
+            .style("margin", "5px 0")
+            .style("font-size", "12px")
+            .text("Recent BVP Trend");
+        
+        // Only get the most recent 100 points for the sparkline
+        const sparklineData = filteredData.slice(-100);
+        
+        // SVG for sparkline
+        const sparkSvg = sparklineContainer.append("svg")
+            .attr("width", 230)
+            .attr("height", 40)
+            .style("background-color", "#f9f9f9")
+            .style("border-radius", "3px");
+        
+        // Scales for sparkline
+        const sparkX = d3.scaleLinear()
+            .domain(d3.extent(sparklineData, d => d.time_s))
+            .range([5, 225]);
+        
+        const sparkY = d3.scaleLinear()
+            .domain(d3.extent(sparklineData, d => d.bvp))
+            .range([35, 5]);
+        
+        // Draw sparkline
+        const sparkLine = d3.line()
+            .x(d => sparkX(d.time_s))
+            .y(d => sparkY(d.bvp))
+            .curve(d3.curveMonotoneX);
+        
+        sparkSvg.append("path")
+            .datum(sparklineData)
+            .attr("fill", "none")
+            .attr("stroke", "#0066cc")
+            .attr("stroke-width", 1.5)
+            .attr("d", sparkLine);
+        
+        // Add endpoints
+        const lastPoint = sparklineData[sparklineData.length - 1];
+        
+        sparkSvg.append("circle")
+            .attr("cx", sparkX(lastPoint.time_s))
+            .attr("cy", sparkY(lastPoint.bvp))
+            .attr("r", 3)
+            .attr("fill", "#0066cc");
+        
+        // Add current value label
+        sparkSvg.append("text")
+            .attr("x", sparkX(lastPoint.time_s) + 5)
+            .attr("y", sparkY(lastPoint.bvp) + 3)
+            .attr("font-size", "10px")
+            .attr("fill", "#0066cc")
+            .text(lastPoint.bvp.toFixed(2));
+        
+        return stats;
+    }
     // Attach event listeners to the BVP line
     // Predict future stress levels using simple moving average with trend detection
 function predictStress(windowSize = 20, predictionSteps = 10) {
@@ -484,9 +767,6 @@ function startAnimation() {
             
             // Update slider position (without triggering its event)
             timeSlider.property("value", currentTime);
-            
-            // Update time display
-            d3.select("#time-display").text(`Current Time: ${currentTime.toFixed(2)}s`);
         } else {
             pauseAnimation();
             currentTime = minTime; // Reset to beginning
@@ -519,12 +799,113 @@ function startAnimation() {
         
         // Update time display
         d3.select("#time-display").text(`Current Time: ${currentTime.toFixed(2)}s`);
+        updateStatistics(filteredData.slice(0, Math.min(100, filteredData.length)));
+
     }
 
     // No transition version for smoother animation
     function updateChartForTimeNoTransition(selectedTime) {
-        updateChartForTime(selectedTime, false);
+        currentTime = parseFloat(selectedTime);
+        const filteredData = data.filter(d => d.time_s <= currentTime);
+        
+        // Update domain dynamically
+        xScale.domain([minTime, Math.max(currentTime, minTime + 5)]); // At least show 5s window
+        
+        // Update axes without transition
+        xAxis.call(d3.axisBottom(xScale));
+        
+        // Update data line
+        svg.select(".bvp-line")
+            .datum(filteredData)
+            .attr("d", line);
+        
+        // Update time display
+        d3.select("#time-display").text(`Current Time: ${currentTime.toFixed(2)}s`);
+        
+        // Get the last N points for a moving trend line (more responsive to recent changes)
+        const lastNPoints = Math.min(30, filteredData.length);
+        const recentData = filteredData.slice(-lastNPoints);
+        
+        // Only update trend line and stats if we have enough data points
+        if (recentData.length >= 5) {
+            // Update trend line only (without full statistics panel refresh for performance)
+            updateTrendLineOnly(recentData);
+        }
     }
+    function updateTrendLineOnly(data) {
+        // Remove any existing trendline
+        svg.selectAll(".trend-line").remove();
+        
+        if (data.length < 2) return; // Need at least 2 points
+        
+        // Simple linear regression for trendline
+        let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+        let n = data.length;
+        
+        data.forEach(d => {
+            sumX += d.time_s;
+            sumY += d.bvp;
+            sumXY += d.time_s * d.bvp;
+            sumX2 += d.time_s * d.time_s;
+        });
+        
+        const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+        const intercept = (sumY - slope * sumX) / n;
+        
+        // Create trendline data
+        const timeExtent = d3.extent(data, d => d.time_s);
+        
+        // For animation smoothness, extend the trend line a bit beyond current data
+        // but keep it within the visible area
+        const visibleMax = xScale.domain()[1];
+        const extendedMax = Math.min(timeExtent[1] + 2, visibleMax);
+        
+        const trendData = [
+            { time_s: timeExtent[0], bvp: slope * timeExtent[0] + intercept },
+            { time_s: extendedMax, bvp: slope * extendedMax + intercept }
+        ];
+        
+        // Draw the trendline
+        svg.append("path")
+            .datum(trendData)
+            .attr("class", "trend-line")
+            .attr("fill", "none")
+            .attr("stroke", "#ff6600")
+            .attr("stroke-width", 2)
+            .attr("stroke-dasharray", "6,3")
+            .attr("d", d3.line()
+                .x(d => xScale(d.time_s))
+                .y(d => yScale(d.bvp))
+            );
+        
+        // Add trendline label
+        const labelX = xScale(trendData[1].time_s) - 120;
+        const labelY = yScale(trendData[1].bvp) - 10;
+        
+        // Only add label if it's within the visible area
+        if (labelX > 0 && labelX < width && labelY > 0 && labelY < height) {
+            svg.append("text")
+                .attr("class", "trend-line")
+                .attr("x", labelX)
+                .attr("y", labelY)
+                .attr("fill", "#ff6600")
+                .attr("font-weight", "bold")
+                .attr("font-size", "12px")
+                .text(`Trend: ${slope > 0 ? "Rising" : "Falling"} (${slope.toFixed(4)})`);
+        }
+        
+        // Update trend value in stats panel if it exists
+        const trendCell = d3.select("#stats-panel").select("tr:nth-child(9) td:nth-child(2)");
+        if (!trendCell.empty()) {
+            trendCell
+                .style("color", slope > 0 ? "#00aa44" : "#dd4444")
+                .style("font-weight", "bold")
+                .text(`${slope.toFixed(4)} ${slope > 0 ? "↗" : "↘"}`);
+        }
+        
+        return { slope, intercept };
+    }
+        
 
     // Function to update chart based on condition
     // Modified updateChart function to fix the blank chart issue
@@ -926,6 +1307,67 @@ d3.select("#condition-toggle").html(`Activity: <strong>${uniquePhases[0]}</stron
 
 // Initialize the chart with the first phase
 updateChart(uniquePhases[0]);
+
+const styleElement = document.createElement('style');
+styleElement.textContent = `
+    .trend-line {
+        pointer-events: none;
+    }
+    #stats-panel table {
+        width: 100%;
+    }
+    #stats-panel table tr:nth-child(even) {
+        background-color: #f5f5f5;
+    }
+    .stats-header {
+        cursor: move;
+    }
+`;
+document.head.appendChild(styleElement);
+
+// Make the stats panel draggable
+function makeStatsPanelDraggable() {
+    const statsPanel = document.getElementById('stats-panel');
+    if (!statsPanel) return;
+    
+    let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+    
+    document.querySelector('.stats-header').onmousedown = dragMouseDown;
+    
+    function dragMouseDown(e) {
+        e = e || window.event;
+        e.preventDefault();
+        // get the mouse cursor position at startup:
+        pos3 = e.clientX;
+        pos4 = e.clientY;
+        document.onmouseup = closeDragElement;
+        // call a function whenever the cursor moves:
+        document.onmousemove = elementDrag;
+    }
+    
+    function elementDrag(e) {
+        e = e || window.event;
+        e.preventDefault();
+        // calculate the new cursor position:
+        pos1 = pos3 - e.clientX;
+        pos2 = pos4 - e.clientY;
+        pos3 = e.clientX;
+        pos4 = e.clientY;
+        // set the element's new position:
+        statsPanel.style.top = (statsPanel.offsetTop - pos2) + "px";
+        statsPanel.style.left = (statsPanel.offsetLeft - pos1) + "px";
+        statsPanel.style.right = "auto";
+    }
+    
+    function closeDragElement() {
+        // stop moving when mouse button is released:
+        document.onmouseup = null;
+        document.onmousemove = null;
+    }
+}
+
+// Call this after the stats panel is created
+setTimeout(makeStatsPanelDraggable, 1000);
 
 }).catch(error => console.error("Error loading CSV:", error));
 
