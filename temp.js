@@ -464,6 +464,33 @@ d3.csv('data/combined_temperature_data2.csv').then(function(data) {
         }
         return null;
     }
+
+    // Function to get description for phases
+function getPhaseDescription(phaseName) {
+    const descriptions = {
+        'Baseline': 'Initial resting period',
+        'Warm up': 'Gradual exercise start',
+        'Sprint 1': 'First high-intensity interval',
+        'Sprint 2': 'Second high-intensity interval',
+        'Sprint 3': 'Third high-intensity interval',
+        'Sprint 4': 'Fourth high-intensity interval',
+        'Cool Down': 'Reducing intensity period',
+        'Rest': 'Final recovery period',
+        '70 rpm': 'Pedaling at 70 revolutions/minute',
+        '75 rpm': 'Pedaling at 75 revolutions/minute',
+        '80 rpm': 'Pedaling at 80 revolutions/minute',
+        '85 rpm': 'Pedaling at 85 revolutions/minute',
+        '90/95 rpm': 'Pedaling at 90-95 revolutions/minute',
+        'TMCT': 'Toronto Modified Consonant Trigrams test',
+        'First Rest': 'Initial recovery period',
+        'Real Opinion': 'Expressing genuine viewpoint',
+        'Opposite Opinion': 'Expressing contrary viewpoint',
+        'Second Rest': 'Secondary recovery period',
+        'Subtract Test': 'Mental arithmetic task'
+    };
+    
+    return descriptions[phaseName] || 'No description available';
+}
     
     // Function to create/update the phase highlights
     function updatePhaseHighlight(condition, time) {
@@ -525,7 +552,7 @@ d3.csv('data/combined_temperature_data2.csv').then(function(data) {
     function startAnimation() {
         if (!animationRunning) {
             animationRunning = true;
-            playButton.text('Pause');
+            d3.select('#play-button-text').html('⏸ Pause');
             animate();
         }
     }
@@ -533,7 +560,7 @@ d3.csv('data/combined_temperature_data2.csv').then(function(data) {
     function stopAnimation() {
         clearTimeout(animationTimer);
         animationRunning = false;
-        playButton.text('Play');
+        d3.select('#play-button-text').html('▶ Play');
     }
     
     function resetAnimation() {
@@ -711,7 +738,8 @@ d3.csv('data/combined_temperature_data2.csv').then(function(data) {
         .attr('id', 'temp-value')
         .style('font-size', '16px')
         .text('--°C');
-    
+    // Initialize temperature value
+    d3.select('#temp-value').text('--°C');  
     // Initialize with first frame
     updateThermometer(0);
 });
