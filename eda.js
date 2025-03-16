@@ -4,6 +4,44 @@ document.addEventListener("DOMContentLoaded", function () {
     const edaWidth = 900 - edaMargin.left - edaMargin.right;
     const edaHeight = 500 - edaMargin.top - edaMargin.bottom;
 
+    //experiment time line
+    const EXPERIMENT_PHASES = {
+        "Aerobic": [
+          { name: "Baseline", start: 0, end: 270 },      // 4:30
+          { name: "Warm up", start: 270, end: 405 },    // +2:15
+          { name: "70 rpm", start: 405, end: 495 },     // +1:30
+          { name: "75 rpm", start: 495, end: 615 },     // +1:30
+          { name: "80 rpm", start: 615, end: 735 },     // +1:30
+          { name: "85 rpm", start: 735, end: 1350 },    // +11:15
+          { name: "Cool Down", start: 1350, end: 1620 },// +4:30
+          { name: "Rest", start: 1620, end: 3200 }      // +3:00
+        ],
+        "Anaerobic": [
+          { name: "Baseline", start: 0, end: 270 },      // 4:30
+          { name: "Warm up", start: 270, end: 540 },     // +4:30
+          { name: "Sprint 1", start: 540, end: 585 },    // +0:45
+          { name: "Cool Down", start: 585, end: 840 }, 
+          { name: "Sprint 2", start: 840, end: 885 },
+          { name: "Cool Down", start: 885, end: 1110 },
+          { name: "Sprint 3", start: 1110, end: 1155 },
+          { name: "Cool Down", start: 1155, end: 1380 },
+          { name: "Sprint 4", start: 1380, end: 1425 },
+          { name: "Cool Down", start: 1425, end: 1650 },
+          { name: "Rest", start: 1650, end: 4000 }
+          
+        ],
+        "Stress": [
+          { name: "Baseline", start: 0, end: 180 },       // 3:00        // +10:00
+          { name: "TMCT", start: 180, end: 360 },
+          { name: "First Rest", start: 360, end: 960 },
+          { name: "Real Opinion", start: 960, end: 990 },
+          { name: "Opposite Opinion", start: 990, end: 1020 },
+          { name: "Second Rest", start: 1020, end: 1620 },
+          { name: "Subtract Test", start: 1620, end: 5000 }
+          
+        ]
+      };
+
    // Select SVG and add canvas
     const edaSvg = d3.select("#eda-chart")
         .append("svg")
@@ -12,9 +50,9 @@ document.addEventListener("DOMContentLoaded", function () {
         .append("g")
         .attr("transform", `translate(${edaMargin.left},${edaMargin.top})`);
 
-     // Color scale
-    const edaColorScale = d3.scaleOrdinal(d3.schemeCategory10);
+    
 
+    
     
     d3.csv("data/Merged_Data.csv").then(function (edaData) {
         edaData.forEach(d => {
@@ -124,10 +162,10 @@ document.addEventListener("DOMContentLoaded", function () {
         function hexToSolid(rgba) {
          
             const colorMap = {
-                "rgba(0, 255, 0, 0.1)": "#00cc00",  // 绿色
-                "rgba(0, 0, 255, 0.1)": "#0066ff",  // 蓝色
-                "rgba(255, 0, 0, 0.1)": "#ff4444",  // 红色
-                "rgba(255, 0, 0, 0.2)": "#ff0000"   // 深红
+                "rgba(0, 255, 0, 0.1)": "#00cc00", 
+                "rgba(0, 0, 255, 0.1)": "#0066ff",  
+                "rgba(255, 0, 0, 0.1)": "#ff4444",  
+                "rgba(255, 0, 0, 0.2)": "#ff0000"   
             };
             return colorMap[rgba] || "#333";
         }
@@ -160,12 +198,17 @@ document.addEventListener("DOMContentLoaded", function () {
                 })).sort((a, b) => a.timestamp - b.timestamp)
             };
         
-            
-            const xDomain = d3.extent(filteredData, d => d.timestamp);
+            const currentPhases = EXPERIMENT_PHASES[currentExperiment] || [];
+            currentPhases.sort((a,b) => (a.priority || 0) - (b.priority || 0)); 
+
+            const xDomain = [
+                d3.min(currentPhases, d => d.start) || 0,  // 使用start字段
+                d3.max(currentPhases, d => d.end) || d3.max(filteredData, d => d.timestamp)
+              ];
             edaXScale.domain(xDomain);
             edaSvg.select(".x-axis").call(edaXAxis);
         
-            const yMax = d3.max(processedData.values, d => d.EDA) || 0; // 处理空数据情况
+            const yMax = d3.max(processedData.values, d => d.EDA) || 0;
             edaYScale.domain([0, yMax]);
             edaSvg.select(".y-axis").call(edaYAxis);
         
@@ -182,10 +225,10 @@ document.addEventListener("DOMContentLoaded", function () {
             ];
             
             const zones = [
-                { y1: 0, y2: 2, color: "rgba(0, 255, 0, 0.1)", label: "Calm (<2μS)" },  // 绿色背景
-                { y1: 2, y2: 5, color: "rgba(0, 0, 255, 0.1)", label: "Mild Arousal (2-5μS)" }, // 蓝色背景
-                { y1: 5, y2: 10, color: "rgba(255, 0, 0, 0.1)", label: "Moderate Arousal (5-10μS)" }, // 红色背景
-                { y1: 10, y2: Infinity, color: "rgba(255, 0, 0, 0.2)", label: "High Arousal (>10μS)" } // 深红色背景
+                { y1: 0, y2: 2, color: "rgba(0, 255, 0, 0.1)", label: "Calm (<2μS)" },  
+                { y1: 2, y2: 5, color: "rgba(0, 0, 255, 0.1)", label: "Mild Arousal (2-5μS)" }, 
+                { y1: 5, y2: 10, color: "rgba(255, 0, 0, 0.1)", label: "Moderate Arousal (5-10μS)" }, 
+                { y1: 10, y2: Infinity, color: "rgba(255, 0, 0, 0.2)", label: "High Arousal (>10μS)" } 
             ];
 
             const bands = edaSvg.selectAll(".eda-background-band")
@@ -197,7 +240,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             thresholdLines.enter()
                 .append("line")
-                .attr("class", d => `eda-threshold-line eda-${d.color}-line`) // 双重类名
+                .attr("class", d => `eda-threshold-line eda-${d.color}-line`) 
                 .merge(thresholdLines)
                 .attr("x1", 0)
                 .attr("x2", edaWidth)
@@ -210,6 +253,54 @@ document.addEventListener("DOMContentLoaded", function () {
 
             const thresholdLabels = edaSvg.selectAll(".eda-threshold-label")
                 .data(thresholds);
+
+            edaSvg.selectAll(".phase-marker, .phase-label").remove();
+
+             
+            const bisectTime = d3.bisector(d => d.timestamp).left;
+
+            
+            
+            currentPhases.forEach((phase, phaseIndex) => {
+
+
+                
+                
+                const index = bisectTime(processedData.values, phase.start, 0);
+                const dataPoint = processedData.values[Math.min(index, processedData.values.length - 1)];
+
+                if (dataPoint) {
+                
+                edaSvg.append("circle")
+                    .attr("class", "phase-marker")
+                    .attr("cx", edaXScale(dataPoint.timestamp))
+                    .attr("cy", edaYScale(dataPoint.EDA))
+                    .attr("r", 4)
+                    .attr("fill", "none")      
+                    .attr("stroke", "#ff5722") 
+                    .attr("stroke-width", 2);
+
+                
+                
+                const labelX = edaXScale(dataPoint.timestamp) + 0; 
+                const verticalOffset = phaseIndex % 2 === 0 ? -25 : 25; 
+                const labelY = edaYScale(dataPoint.EDA) + verticalOffset;
+                
+                edaSvg.append("text")
+                    .attr("class", "phase-label")
+                    .attr("x", labelX)
+                    .attr("y", labelY)
+                    .attr("dy", ".35em")
+                    .text(phase.name)
+                    .style("font-size", "10px")
+                    .style("fill", "#333")
+                    .style("font-weight", "bold")
+                    .style("text-anchor", "start")
+                    .style("pointer-events", "none");
+                }
+            });
+
+
 
             thresholdLabels.enter()
                 .append("text")
@@ -252,7 +343,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 .merge(lines)
                 .transition().duration(500)
                 .attr("fill", "none")
-                .attr("stroke", edaColorScale(currentExperiment))
+                .attr("stroke",  "#4682b4")
                 .attr("stroke-width", 2)
                 .attr("d", edaLine)
                 .attr("class", "eda-line");
@@ -363,4 +454,3 @@ document.addEventListener("DOMContentLoaded", function () {
         
     });
 });
-

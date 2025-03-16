@@ -1,8 +1,15 @@
-.#eda-chart {
+#eda-chart {
     width: 900px;
     height: 500px;
 }
 
+.slider-container {
+    margin: 15px 0;
+  }
+  input[type="range"] {
+    vertical-align: middle;
+    width: 200px;
+  }
 
 
 .x-axis path, .y-axis path {
@@ -20,10 +27,11 @@
 }
 
 
+
 #eda-tooltip {
   min-width: 180px;
   padding: 12px;
-  background: #ffffff; /* 纯白背景 */
+  background: #ffffff; 
   border: 1px solid #ddd;
   border-radius: 6px;
   pointer-events: none;
@@ -43,12 +51,12 @@
 
 
 
-
+/* 虚线样式 */
 .eda-guide-line {
-  --guide-color: #eff2f4; /* 统一颜色变量 */
+  --guide-color: #eff2f4; 
   stroke: var(--guide-color);
   stroke-width: 1.2px;
-  stroke-dasharray: 5, 4; /* 更现代虚线样式 */
+  stroke-dasharray: 5, 4; 
   opacity: 0.8;
   transition: stroke-opacity 0.2s;
 }
@@ -62,10 +70,10 @@
 }
 
 .eda-data-point {
-  fill: #ff3860; /* 鲜艳的红色 */
+  fill: #ff3860; 
   stroke: white;
   stroke-width: 1.5px;
-  r: 5; /* 圆点半径 */
+  r: 5; 
   pointer-events: none; 
 }
 
@@ -88,14 +96,14 @@
   fill: #ff3860; 
   stroke: white;
   stroke-width: 1.5px;
-  r: 5; /* 圆点半径 */
-  pointer-events: none;
-}
+  r: 5; 
+  pointer-events: none; 
 
 .eda-threshold-label {
   font-family: 'Arial', sans-serif;
   font-weight: 600; 
   paint-order: stroke; 
+  stroke: white;
   stroke-width: 2px;
 }
 
@@ -128,7 +136,6 @@
 
 
 
-/* 添加过渡效果 */
 .eda-line {
   transition: stroke-width 0.3s, opacity 0.3s;
 }
@@ -136,3 +143,43 @@
 .eda-controls {
   transition: all 0.3s;
 }
+
+
+/* eda.css */
+.phase-annotation {
+  pointer-events: none; 
+}
+
+.eda-chart {
+  margin-bottom: 60px; 
+}
+
+/* eda.css */
+.phase-marker {
+  fill: none !important;
+  stroke: #ff5722;
+  stroke-width: 2px;
+  z-index: 4; /
+}
+.eda-line {
+  z-index: 10 !important; 
+  stroke: #4682b4 !important; 
+  opacity: 1 !important; 
+}
+
+
+.phase-label {
+  pointer-events: none;
+  text-shadow: 
+      -1px -1px 3px white,
+      1px -1px 3px white,
+      -1px 1px 3px white,
+      1px 1px 3px white; 
+  dominant-baseline: middle; 
+}
+
+.phase-marker:hover {
+  r: 9;
+  fill: #e69a2f;
+}
+
