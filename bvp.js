@@ -828,6 +828,68 @@ if (!speedSlider.empty()) {
         });
     }
 
+    // Add condition toggle button
+// Add condition toggle buttons
+const controlPanel = d3.select(".control-panel") || d3.select("#control-panel");
+if (!controlPanel.empty()) {
+    // Create a button container
+    const buttonContainer = controlPanel.append("div")
+        .attr("class", "control-row")
+        .style("margin-top", "10px");
+    
+    // Add label
+    buttonContainer.append("label")
+        .text("Activity Type:")
+        .style("margin-right", "10px");
+    
+    // Add a button for each condition
+    uniquePhases.forEach((phase, index) => {
+        const colors = {
+            "AEROBIC": ["#2e7bff", "#5291ff"],
+            "ANAEROBIC": ["#ff4d4d", "#ff7373"],
+            "STRESS": ["#00d87a", "#33e699"]
+        };
+        
+        const buttonColor = colors[phase] || ["#9966cc", "#ab7ae0"];
+        
+        buttonContainer.append("button")
+            .attr("class", "condition-button")
+            .attr("data-condition", phase)
+            .html(phase)
+            .style("margin", "0 5px")
+            .style("background", `linear-gradient(45deg, ${buttonColor[0]}, ${buttonColor[1]})`)
+            .style("color", "white")
+            .style("padding", "8px 15px")
+            .style("border", "none")
+            .style("border-radius", "5px")
+            .style("cursor", "pointer")
+            .style("font-weight", index === 0 ? "bold" : "normal")
+            .style("opacity", index === 0 ? "1" : "0.7")
+            .style("box-shadow", index === 0 ? "0 3px 8px rgba(0,0,0,0.3)" : "0 2px 4px rgba(0,0,0,0.2)")
+            .on("click", function() {
+                // Update all buttons to inactive style
+                d3.selectAll(".condition-button")
+                    .style("font-weight", "normal")
+                    .style("opacity", "0.7")
+                    .style("box-shadow", "0 2px 4px rgba(0,0,0,0.2)");
+                
+                // Set this button to active style
+                d3.select(this)
+                    .style("font-weight", "bold")
+                    .style("opacity", "1")
+                    .style("box-shadow", "0 3px 8px rgba(0,0,0,0.3)");
+                
+                // Get the condition from the button's data attribute
+                const selectedCondition = this.getAttribute("data-condition");
+                
+                // Update dropdown value to match (in case it's still visible)
+                d3.select("#bvpConditionSelect").property("value", selectedCondition);
+                
+                // Update chart
+                updateChart(selectedCondition);
+            });
+    });
+}
     // Automatically update prediction during playback
     function updateWithPrediction() {
         if (isPlaying && currentTime > minTime + 10) { // Need some data first
@@ -853,12 +915,17 @@ if (!speedSlider.empty()) {
     
     // Select the first condition by default
     d3.select("#bvpConditionSelect").property("value", uniquePhases[0]);
+    d3.select("#bvpConditionSelect").style("display", "none");
+
 
     // Initialize the time display
     d3.select("#time-display").text(`Current Time: ${minTime.toFixed(2)}s`);
 
-    // Initial chart update
-    updateChart(uniquePhases[0]);
+    // Initialize toggle button label with the first phase
+d3.select("#condition-toggle").html(`Activity: <strong>${uniquePhases[0]}</strong>`);
+
+// Initialize the chart with the first phase
+updateChart(uniquePhases[0]);
 
 }).catch(error => console.error("Error loading CSV:", error));
 
