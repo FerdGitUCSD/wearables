@@ -85,14 +85,28 @@ d3.csv("data/combined_bvp_f01_f18.csv").then(loadedData => {
 
     // Phase Mapping
     // Complete phase mapping (case-insensitive)
+// Complete phase mapping (case-insensitive)
 const phaseMap = {
     "real opinion": "STRESS",
     "opposite opinion": "STRESS",
     "first rest": "AEROBIC",
     "second rest": "ANAEROBIC",
-    "baseline": "BASELINE",    // Map this to a new category
-    "no phase": "OTHER",       // Map this to a new category
-    "tmct": "OTHER"            // Map this to a new category
+    "baseline": "BASELINE",
+    "no phase": "OTHER",
+    "tmct": "OTHER",
+    "subtract test": "STRESS",
+    "cool down": "AEROBIC",
+    "rest": "AEROBIC",
+    "warm up": "AEROBIC",
+    "70 rpm": "AEROBIC",
+    "75 rpm": "AEROBIC",
+    "80 rpm": "AEROBIC",
+    "85 rpm": "AEROBIC",
+    "90/95 rpm": "AEROBIC",
+    "sprint 1": "ANAEROBIC",
+    "sprint 2": "ANAEROBIC",
+    "sprint 3": "ANAEROBIC",
+    "sprint 4": "ANAEROBIC"
 };
 
 // Process data with case-insensitive mapping
@@ -450,12 +464,13 @@ function visualizePredictions(predictions) {
     }
 
     // Start animation function
-    function startAnimation() {
-        clearInterval(autoPlayInterval); // Clear any existing interval
-        autoPlayInterval = setInterval(autoPlay, animationSpeed);
-        d3.select("#play-pause-btn").text("Pause");
-        isPlaying = true;
-    }
+  // Start animation function
+function startAnimation() {
+    clearInterval(autoPlayInterval); // Clear any existing interval first
+    autoPlayInterval = setInterval(autoPlay, animationSpeed);
+    d3.select("#play-pause-btn").text("Pause");
+    isPlaying = true;
+}
 
     // Pause animation function
     function pauseAnimation() {
@@ -780,15 +795,28 @@ function visualizePredictions(predictions) {
 }
 
     // Setup speed slider if it exists
-    const speedSlider = d3.select("#speed-slider");
-    if (!speedSlider.empty()) {
-        speedSlider.on("input", function() {
-            animationSpeed = 550 - parseInt(this.value); // Invert so higher = faster
-            if (isPlaying) {
-                startAnimation(); // Restart with new speed
-            }
-        });
-    }
+    // Setup speed slider with better scaling
+const speedSlider = d3.select("#speed-slider");
+if (!speedSlider.empty()) {
+    speedSlider.on("input", function() {
+        const sliderValue = parseInt(this.value);
+        // Create a more intuitive mapping: higher value = faster animation (lower delay)
+        animationSpeed = 500 - (sliderValue * 5);
+        if (animationSpeed < 10) animationSpeed = 10; // Prevent too fast animation
+        
+        // Update display if it exists
+        const speedDisplay = d3.select("#speed-value");
+        if (!speedDisplay.empty()) {
+            speedDisplay.text(`${Math.round((sliderValue/100) * 100)}%`);
+        }
+        
+        if (isPlaying) {
+            // Restart with new speed (clear and restart interval)
+            clearInterval(autoPlayInterval);
+            autoPlayInterval = setInterval(autoPlay, animationSpeed);
+        }
+    });
+}
 
     // Setup reset button if it exists
     const resetBtn = d3.select("#reset-btn");
