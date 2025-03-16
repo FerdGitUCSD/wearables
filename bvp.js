@@ -144,11 +144,6 @@ const conditionSelect = d3.select("#bvpConditionSelect");
 // Clear existing options
 conditionSelect.selectAll("option").remove();
 
-// Add "all" option
-conditionSelect.append("option")
-    .attr("value", "all")
-    .text("All");
-
 // Add options for each unique phase
 uniquePhases.forEach(phase => {
     conditionSelect.append("option")
@@ -533,78 +528,74 @@ function startAnimation() {
 
     // Function to update chart based on condition
     // Modified updateChart function to fix the blank chart issue
-    function updateChart(condition) {
-        console.log(`⚠️ Raw condition input: "${condition}"`);
+    // Modified updateChart function to fix the blank chart issue
+function updateChart(condition) {
+    console.log(`⚠️ Chart updating for condition: "${condition}"`);
+    
+    // Start from the original complete dataset
+    let filteredData;
+    
+    // Since there's no "all" option anymore, directly filter by condition
+    filteredData = originalData.filter(d => {
+        if (!d.phase) return false;
         
-        // Always start from the original complete dataset
-        let filteredData;
-        
-        if (condition === "all") {
-            filteredData = originalData;
-        } else {
-            // Filter from originalData, not potentially already-filtered data
-            filteredData = originalData.filter(d => {
-                if (!d.phase) return false;
-                
-                // Case-insensitive exact match only for our three target conditions
-                return d.phase.toUpperCase() === condition.toUpperCase();
-            });
-        }
-        
-        // Debug log
-        console.log(`Filtered data for condition "${condition}": ${filteredData.length} points`);
-        
-        if (filteredData.length === 0) {
-            console.error(`❌ No data found for condition: ${condition}`);
-            alert(`No data found for condition: ${condition}. Check console for details.`);
-            return;
-        }
-        
-        // Update domains
-        xScale.domain(d3.extent(filteredData, d => d.time_s));
-        yScale.domain(d3.extent(filteredData, d => d.bvp));
-        
-        // Update axes
-        xAxis.transition().duration(500).call(d3.axisBottom(xScale));
-        yAxis.transition().duration(500).call(d3.axisLeft(yScale));
-        
-        // Update line class for proper styling
-        svg.select(".bvp-line")
-            .attr("class", "bvp-line")  // Reset to base class
-            .classed(condition.toLowerCase(), condition !== "all");  // Add condition class
-        
-        // Update line data
-        svg.select(".bvp-line")
-            .datum(filteredData)
-            .transition()
-            .duration(500)
-            .attr("d", line);
-        
-        // Reset animation state
-        currentTime = minTime = d3.min(filteredData, d => d.time_s);
-        maxTime = d3.max(filteredData, d => d.time_s);
-        
-        // Update slider with new range
-        const timeSlider = d3.select("#time-slider")
-            .attr("min", minTime)
-            .attr("max", maxTime)
-            .property("value", currentTime);
-        
-        pauseAnimation();
-        
-        // Use the filtered data for current visualization, but don't overwrite the global data
-        data = filteredData;
-        
-        // Reset any predictions
-        svg.selectAll(".prediction-line").remove();
-        svg.selectAll(".prediction-point").remove();
-        svg.selectAll(".prediction-interval").remove();
-        svg.selectAll(".prediction-label").remove();
-        d3.select("#stress-prediction").html("Stress Prediction: N/A");
-        
-        // Update time display
-        d3.select("#time-display").text(`Current Time: ${currentTime.toFixed(2)}s`);
+        // Case-insensitive exact match for our target conditions
+        return d.phase.toUpperCase() === condition.toUpperCase();
+    });
+    
+    // Debug log
+    console.log(`Filtered data for condition "${condition}": ${filteredData.length} points`);
+    
+    if (filteredData.length === 0) {
+        console.error(`❌ No data found for condition: ${condition}`);
+        alert(`No data found for condition: ${condition}. Check console for details.`);
+        return;
     }
+    
+    // Update domains
+    xScale.domain(d3.extent(filteredData, d => d.time_s));
+    yScale.domain(d3.extent(filteredData, d => d.bvp));
+    
+    // Update axes
+    xAxis.transition().duration(500).call(d3.axisBottom(xScale));
+    yAxis.transition().duration(500).call(d3.axisLeft(yScale));
+    
+    // Update line class for proper styling - add the condition class
+    svg.select(".bvp-line")
+        .attr("class", `bvp-line ${condition.toLowerCase()}`);
+    
+    // Update line data
+    svg.select(".bvp-line")
+        .datum(filteredData)
+        .transition()
+        .duration(500)
+        .attr("d", line);
+    
+    // Reset animation state
+    currentTime = minTime = d3.min(filteredData, d => d.time_s);
+    maxTime = d3.max(filteredData, d => d.time_s);
+    
+    // Update slider with new range
+    const timeSlider = d3.select("#time-slider")
+        .attr("min", minTime)
+        .attr("max", maxTime)
+        .property("value", currentTime);
+    
+    pauseAnimation();
+    
+    // Use the filtered data for current visualization
+    data = filteredData;
+    
+    // Reset any predictions
+    svg.selectAll(".prediction-line").remove();
+    svg.selectAll(".prediction-point").remove();
+    svg.selectAll(".prediction-interval").remove();
+    svg.selectAll(".prediction-label").remove();
+    d3.select("#stress-prediction").html("Stress Prediction: N/A");
+    
+    // Update time display
+    d3.select("#time-display").text(`Current Time: ${currentTime.toFixed(2)}s`);
+}
     // Predict future stress levels using simple moving average with trend detection
     // Predict future stress levels using simple moving average with trend detection
 function predictStress(windowSize = 20, predictionSteps = 10) {
@@ -856,16 +847,18 @@ if (!speedSlider.empty()) {
         updateChartForTime(this.value);
     });
 
-    // Event listener for dropdown
     d3.select("#bvpConditionSelect").on("change", function() {
         updateChart(this.value);
     });
+    
+    // Select the first condition by default
+    d3.select("#bvpConditionSelect").property("value", uniquePhases[0]);
 
     // Initialize the time display
     d3.select("#time-display").text(`Current Time: ${minTime.toFixed(2)}s`);
 
     // Initial chart update
-    updateChart("all");
+    updateChart(uniquePhases[0]);
 
 }).catch(error => console.error("Error loading CSV:", error));
 
