@@ -258,7 +258,7 @@ d3.csv('data/combined_temperature_data2.csv').then(function(data) {
     const maxTime = d3.max(data, d => d.time);
     
     // Create a control panel container
-    const controlPanel = d3.select('#chart-container')
+    const controlPanel = d3.select('#control-panel')
         .append('div')
         .attr('id', 'control-panel')
         .style('margin', '15px auto')
@@ -313,16 +313,16 @@ d3.csv('data/combined_temperature_data2.csv').then(function(data) {
         .html('↻ Reset');
     
     // Add time display
-    const timeDisplay = controlPanel.append('div')
-        .attr('id', 'time-display')
-        .style('margin', '10px 20px')
-        .style('padding', '8px 15px')
-        .style('background', '#fff')
-        .style('border-radius', '4px')
-        .style('font-weight', 'bold')
-        .style('min-width', '120px')
-        .style('text-align', 'center')
-        .text('Time: 0s');
+    // const timeDisplay = controlPanel.append('div')
+    //     .attr('id', 'time-display')
+    //     .style('margin', '10px 20px')
+    //     .style('padding', '8px 15px')
+    //     .style('background', '#fff')
+    //     .style('border-radius', '4px')
+    //     .style('font-weight', 'bold')
+    //     .style('min-width', '120px')
+    //     .style('text-align', 'center')
+    //     .text('Time: 0s');
     
     // Add speed control slider with better labeling
     const speedControlContainer = controlPanel.append('div')
@@ -520,6 +520,7 @@ d3.csv('data/combined_temperature_data2.csv').then(function(data) {
     
     // Animation function
     function animate() {
+        
         if (currentTime >= maxTime) {
             stopAnimation();
             return;
@@ -711,8 +712,5 @@ d3.csv('data/combined_temperature_data2.csv').then(function(data) {
             updateThermometer(currentTime);
         }
         
-        // Update any other elements that rely on the time scale
-        // For example, phase markers, grid lines, etc.
-        updatePhaseMarkers();
     }
 });
