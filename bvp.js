@@ -1,6 +1,6 @@
 console.log("✅ bvp.js is running!");
 
-(function() { // Start IIFE (Immediately Invoked Function Expression)
+(function() { 
 
 // Set up dimensions
 const margin = { top: 50, right: 30, bottom: 70, left: 80 };
@@ -50,6 +50,24 @@ svg.append("text")
     .style("font-size", "16px")
     .style("font-weight", "bold")
     .text("Blood Volume Pulse (BVP) Over Time");
+
+// Create tooltip
+const tooltip = d3.select("#bvp-container").append("div")
+
+    .attr("id", "tooltip-bvp")
+    .attr("class", "tooltip")
+    .style("opacity", 0)
+    .style("position", "absolute")
+    .style("pointer-events", "none")
+    .style("z-index", 1000);
+
+// Create mouse tracking area
+const mouseArea = svg.append("rect")
+    .attr("class", "mouse-area")
+    .attr("width", width)
+    .attr("height", height)
+    .style("fill", "none")
+    .style("pointer-events", "all");
 
 // Line generator
 const line = d3.line()
@@ -181,43 +199,55 @@ uniquePhases.forEach(phase => {
         if (phaseUpperCase === "BASELINE") return "#9966cc";  // Purple
         if (phaseUpperCase === "OTHER") return "#666666";     // Gray
         return "#666666"; // Default gray for unknown
-    }
+    } 
 
-// Add this event listener to the chart area
-svg.append("rect")
-    .attr("width", width)
-    .attr("height", height)
-    .style("fill", "none")
-    .style("pointer-events", "all")
-    .on("mousemove", function(event) {
+// Unified tooltip handler
+// Update tooltip function to show BVP value, time, and arousal phase
+function setupTooltipHandlers() {
+    mouseArea.on("mousemove", function(event) {
+        if (isPlaying) return;  // 🔴 Do not show tooltip during animation
+    
         const [mouseX] = d3.pointer(event);
         const hoveredTime = xScale.invert(mouseX);
-
-        // Find the closest data point
+    
+        // Find the closest actual data point
         const closestPoint = data.reduce((prev, curr) =>
             Math.abs(curr.time_s - hoveredTime) < Math.abs(prev.time_s - hoveredTime) ? curr : prev
         );
-
-        // Get phase with proper formatting
-        const phase = closestPoint.phase || "Unknown";
-        const phaseColor = getPhaseColor(phase);
-
+    
+        if (!closestPoint) return;
+    
+        console.log("✅ Tooltip should show:", closestPoint);
+    
+        // Get the bounding box of the chart container
+        const container = document.getElementById("bvp-container").getBoundingClientRect();
+    
+        // Adjust position relative to the chart
+        const tooltipX = Math.min(event.clientX - container.left + 20, container.width - 250);
+        const tooltipY = Math.min(event.clientY - container.top + 20, container.height - 100);
+    
         tooltip
             .style("opacity", 1)
+            .style("left", `${tooltipX}px`)
+            .style("top", `${tooltipY}px`)
             .html(`
-                <div style="font-weight: bold; margin-bottom: 5px;">BVP Data Point</div>
-                <div>Time: ${closestPoint.time_s.toFixed(2)}s</div>
-                <div>BVP: ${closestPoint.bvp.toFixed(3)}</div>
-                <div>Phase: <span style="color: ${phaseColor}; font-weight: bold;">${phase}</span></div>
-            `)
-            .style("left", `${event.pageX + 10}px`)
-            .style("top", `${event.pageY - 10}px`)
-            .style("background-color", "#fff")
-            .style("color", "#333")
-            .style("border", "1px solid #ddd")
-            .style("box-shadow", "2px 2px 6px rgba(0,0,0,0.1)");
+                <div style="font-weight: bold; margin-bottom: 8px;">
+                    BVP Data Point
+                </div>
+                <div><strong>Time:</strong> ${closestPoint.time_s.toFixed(2)}s</div>
+                <div><strong>BVP Value:</strong> ${closestPoint.bvp.toFixed(3)}</div>
+                <div><strong>Arousal Phase:</strong> <span style="color:#ff3333; font-weight: bold;">${closestPoint.phase}</span></div>
+            `);
     })
-    .on("mouseout", () => tooltip.style("opacity", 0));
+    .on("mouseout", function() {
+        if (!isPlaying) {
+            tooltip.style("opacity", 0);  // 🔴 Only hide tooltip when mouse leaves while paused
+        }
+    });
+    
+    
+}
+
 
     function addTrendLine(data) {
         // Remove any existing trendline
@@ -274,234 +304,7 @@ svg.append("rect")
     }
     
     // Create statistics panel in HTML
-    function createStatisticsPanel() {
-        const statsPanel = d3.select("#bvp-container")
-            .append("div")
-            .attr("id", "stats-panel")
-            .style("position", "absolute")
-            .style("top", "10px")
-            .style("right", "10px")
-            .style("background-color", "rgba(255, 255, 255, 0.9)")
-            .style("border", "1px solid #ddd")
-            .style("border-radius", "5px")
-            .style("padding", "10px")
-            .style("box-shadow", "0 2px 6px rgba(0,0,0,0.1)")
-            .style("width", "250px")
-            .style("max-height", "300px")
-            .style("overflow-y", "auto")
-            .style("font-size", "12px");
-        
-        // Create header
-        statsPanel.append("div")
-            .attr("class", "stats-header")
-            .style("display", "flex")
-            .style("justify-content", "space-between")
-            .style("align-items", "center")
-            .style("margin-bottom", "5px")
-            .style("border-bottom", "1px solid #ddd")
-            .style("padding-bottom", "5px");
-        
-        // Add title
-        statsPanel.select(".stats-header")
-            .append("h3")
-            .style("margin", "0")
-            .style("font-size", "14px")
-            .style("font-weight", "bold")
-            .text("BVP Statistics");
-        
-        // Add minimize/maximize button
-        statsPanel.select(".stats-header")
-            .append("button")
-            .attr("id", "stats-toggle")
-            .style("background", "none")
-            .style("border", "none")
-            .style("cursor", "pointer")
-            .style("padding", "0")
-            .style("font-weight", "bold")
-            .text("−")
-            .on("click", function() {
-                const statsContent = d3.select("#stats-content");
-                const isVisible = statsContent.style("display") !== "none";
-                
-                statsContent.style("display", isVisible ? "none" : "block");
-                d3.select(this).text(isVisible ? "+" : "−");
-            });
-        
-        // Create content container
-        statsPanel.append("div")
-            .attr("id", "stats-content");
-        
-        // Create the actual stats content
-        const statsContent = d3.select("#stats-content");
-        
-        // Basic stats table
-        statsContent.append("table")
-            .attr("id", "basic-stats")
-            .style("width", "100%")
-            .style("border-collapse", "collapse")
-            .style("margin-bottom", "10px");
-        
-        // Advanced stats section
-        statsContent.append("div")
-            .attr("class", "advanced-stats")
-            .style("margin-top", "10px");
-        
-        return statsPanel;
-    }
     
-    // Update statistics function
-    function updateStatistics(filteredData) {
-        if (!d3.select("#stats-panel").size()) {
-            createStatisticsPanel();
-        }
-        
-        if (filteredData.length === 0) return;
-        
-        // Calculate basic statistics
-        const bvpValues = filteredData.map(d => d.bvp);
-        const stats = {
-            min: d3.min(bvpValues),
-            max: d3.max(bvpValues),
-            mean: d3.mean(bvpValues),
-            median: d3.median(bvpValues),
-            std: d3.deviation(bvpValues) || 0,
-            count: filteredData.length,
-            phase: filteredData[0].phase
-        };
-        
-        // Calculate time range
-        const timeExtent = d3.extent(filteredData, d => d.time_s);
-        stats.timeRange = timeExtent[1] - timeExtent[0];
-        
-        // Calculate trend information
-        const trendInfo = updateTrendLineOnly(filteredData);
-        stats.trend = trendInfo ? trendInfo.slope : 0;
-        
-        // Calculate zero-crossings (a measure of oscillation)
-        let zeroCrossings = 0;
-        let prevSign = Math.sign(bvpValues[0]);
-        for (let i = 1; i < bvpValues.length; i++) {
-            const currentSign = Math.sign(bvpValues[i]);
-            if (currentSign !== 0 && prevSign !== 0 && currentSign !== prevSign) {
-                zeroCrossings++;
-            }
-            if (currentSign !== 0) prevSign = currentSign;
-        }
-        stats.zeroCrossings = zeroCrossings;
-        
-        // Calculate volatility (moving standard deviation)
-        const windowSize = Math.min(20, Math.floor(bvpValues.length / 4));
-        let volatilities = [];
-        for (let i = windowSize; i < bvpValues.length; i++) {
-            const window = bvpValues.slice(i - windowSize, i);
-            volatilities.push(d3.deviation(window) || 0);
-        }
-        stats.volatility = d3.mean(volatilities) || 0;
-        
-        // Update the statistics table
-        const table = d3.select("#basic-stats");
-        
-        // Clear table
-        table.html("");
-        
-        // Add table rows with data
-        const rows = [
-            { label: "Data Points", value: stats.count.toLocaleString() },
-            { label: "Current Phase", value: stats.phase, 
-              color: getPhaseColor(stats.phase) },
-            { label: "Min BVP", value: stats.min.toFixed(3) },
-            { label: "Max BVP", value: stats.max.toFixed(3) },
-            { label: "Mean BVP", value: stats.mean.toFixed(3) },
-            { label: "Median BVP", value: stats.median.toFixed(3) },
-            { label: "Std Deviation", value: stats.std.toFixed(3) },
-            { label: "Time Range", value: `${stats.timeRange.toFixed(2)}s` },
-            { label: "Trend", value: `${stats.trend.toFixed(4)} ${stats.trend > 0 ? "↗" : "↘"}`, 
-              color: stats.trend > 0 ? "#00aa44" : "#dd4444" },
-            { label: "Volatility", value: stats.volatility.toFixed(3) }
-        ];
-        
-        rows.forEach(row => {
-            const tr = table.append("tr")
-                .style("border-bottom", "1px solid #eee");
-            
-            tr.append("td")
-                .style("padding", "3px 5px")
-                .style("font-weight", "bold")
-                .text(row.label);
-            
-            tr.append("td")
-                .style("padding", "3px 5px")
-                .style("text-align", "right")
-                .style("color", row.color || "inherit")
-                .style("font-weight", row.color ? "bold" : "normal")
-                .text(row.value);
-        });
-        
-        // Update advanced stats
-        const advancedStats = d3.select(".advanced-stats");
-        advancedStats.html("");
-        
-        // Add a mini sparkline of recent values
-        const sparklineContainer = advancedStats.append("div")
-            .attr("class", "sparkline-container")
-            .style("margin-top", "10px");
-        
-        sparklineContainer.append("h4")
-            .style("margin", "5px 0")
-            .style("font-size", "12px")
-            .text("Recent BVP Trend");
-        
-        // Only get the most recent 100 points for the sparkline
-        const sparklineData = filteredData.slice(-100);
-        
-        // SVG for sparkline
-        const sparkSvg = sparklineContainer.append("svg")
-            .attr("width", 230)
-            .attr("height", 40)
-            .style("background-color", "#f9f9f9")
-            .style("border-radius", "3px");
-        
-        // Scales for sparkline
-        const sparkX = d3.scaleLinear()
-            .domain(d3.extent(sparklineData, d => d.time_s))
-            .range([5, 225]);
-        
-        const sparkY = d3.scaleLinear()
-            .domain(d3.extent(sparklineData, d => d.bvp))
-            .range([35, 5]);
-        
-        // Draw sparkline
-        const sparkLine = d3.line()
-            .x(d => sparkX(d.time_s))
-            .y(d => sparkY(d.bvp))
-            .curve(d3.curveMonotoneX);
-        
-        sparkSvg.append("path")
-            .datum(sparklineData)
-            .attr("fill", "none")
-            .attr("stroke", "#0066cc")
-            .attr("stroke-width", 1.5)
-            .attr("d", sparkLine);
-        
-        // Add endpoints
-        const lastPoint = sparklineData[sparklineData.length - 1];
-        
-        sparkSvg.append("circle")
-            .attr("cx", sparkX(lastPoint.time_s))
-            .attr("cy", sparkY(lastPoint.bvp))
-            .attr("r", 3)
-            .attr("fill", "#0066cc");
-        
-        // Add current value label
-        sparkSvg.append("text")
-            .attr("x", sparkX(lastPoint.time_s) + 5)
-            .attr("y", sparkY(lastPoint.bvp) + 3)
-            .attr("font-size", "10px")
-            .attr("fill", "#0066cc")
-            .text(lastPoint.bvp.toFixed(2));
-        
-        return stats;
-    }
     // Attach event listeners to the BVP line
     // Predict future stress levels using simple moving average with trend detection
 function predictStress(windowSize = 20, predictionSteps = 10) {
@@ -576,19 +379,211 @@ function predictStress(windowSize = 20, predictionSteps = 10) {
     return predictions;
 }
 
+function removeStatisticsPanel() {
+  d3.select("#stats-panel").remove();
+}
+
+// Create an enhanced tooltip for the BVP chart
+function createEnhancedTooltip() {
+  // Remove any existing tooltip
+  d3.select("#tooltip-bvp").remove();
+  
+  // Create a new tooltip
+  const tooltip = d3.select("#bvp-container").append("div")
+
+    .attr("id", "tooltip-bvp")
+    .attr("class", "tooltip")
+    .style("opacity", 0)
+    .style("position", "absolute")
+    .style("background-color", "rgba(255, 255, 255, 0.9)")
+    .style("border", "1px solid #ddd")
+    .style("border-radius", "8px")
+    .style("padding", "12px 15px")
+    .style("box-shadow", "0 4px 15px rgba(0, 0, 0, 0.15)")
+    .style("pointer-events", "none")
+    .style("font-size", "13px")
+    .style("font-family", "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif")
+    .style("transition", "opacity 0.2s ease-in-out")
+    .style("z-index", "1000")
+    .style("max-width", "250px");
+  
+  return tooltip;
+}
+
+// Enhance the mouseover tooltip handler
+function enhanceTooltipHandlers() {
+  // Add this event listener to the chart area
+  svg.select(".mouse-hover-area").remove();
+  
+  svg.append("rect")
+    .attr("class", "mouse-hover-area")
+    .attr("width", width)
+    .attr("height", height)
+    .style("fill", "none")
+    .style("pointer-events", "all")
+    .on("mousemove", function(event) {
+      const [mouseX] = d3.pointer(event);
+      const hoveredTime = xScale.invert(mouseX);
+
+      // Check if we're hovering over actual data or prediction
+      const isPrediction = predictions && predictions.length > 0 && 
+                          hoveredTime > predictions[0].time_s;
+      
+      if (isPrediction) {
+        // Find the closest prediction point
+        const closestPoint = predictions.reduce((prev, curr) =>
+          Math.abs(curr.time_s - hoveredTime) < Math.abs(prev.time_s - hoveredTime) ? curr : prev
+        );
+        
+        // Determine if point is a peak or valley
+        const pointStatus = determinePeakOrValley(closestPoint, predictions);
+        
+        // Show prediction tooltip
+        d3.select("#tooltip-bvp")
+          .style("opacity", 1)
+          .html(`
+            <div style="font-weight: bold; margin-bottom: 8px; border-bottom: 2px solid purple; padding-bottom: 5px;">
+              BVP Prediction
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+              <span><strong>Time:</strong></span>
+              <span>${closestPoint.time_s.toFixed(2)}s</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+              <span><strong>BVP Value:</strong></span>
+              <span>${closestPoint.bvp.toFixed(3)}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+              <span><strong>Status:</strong></span>
+              <span>${pointStatus}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; border-top: 1px solid #eee; padding-top: 5px; margin-top: 5px;">
+              <span><strong>Estimated Phase:</strong></span>
+              <span style="font-weight: bold; color: ${closestPoint.bvp > 0.7 ? '#ff3333' : '#0066ff'}">
+                ${closestPoint.bvp > 0.7 ? 'Potential Stress' : 'Normal Activity'}
+              </span>
+            </div>
+          `)
+          .style("left", `${event.pageX + 10}px`)
+          .style("top", `${event.pageY - 10}px`);
+          
+        // Highlight the prediction point
+        highlightPoint(closestPoint, true);
+      } else {
+        // Find the closest actual data point
+        const closestPoint = data.filter(d => d.time_s <= currentTime).reduce((prev, curr) =>
+          Math.abs(curr.time_s - hoveredTime) < Math.abs(prev.time_s - hoveredTime) ? curr : prev
+        );
+        
+        // Determine if point is a peak or valley
+        const pointStatus = determinePeakOrValley(closestPoint, data.filter(d => d.time_s <= currentTime));
+        
+        // Get phase with proper formatting
+        const phase = closestPoint.phase || "Unknown";
+        const phaseColor = getPhaseColor(phase);
+        
+        // Show regular data tooltip
+        d3.select("#tooltip-bvp")
+          .style("opacity", 1)
+          .html(`
+            <div style="font-weight: bold; margin-bottom: 8px; border-bottom: 2px solid ${phaseColor}; padding-bottom: 5px;">
+              BVP Data Point
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+              <span><strong>Time:</strong></span>
+              <span>${closestPoint.time_s.toFixed(2)}s</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+              <span><strong>BVP Value:</strong></span>
+              <span>${closestPoint.bvp.toFixed(3)}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+              <span><strong>Status:</strong></span>
+              <span>${pointStatus}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; border-top: 1px solid #eee; padding-top: 5px; margin-top: 5px;">
+              <span><strong>Phase:</strong></span>
+              <span style="font-weight: bold; color: ${phaseColor};">${phase}</span>
+            </div>
+          `)
+          .style("left", `${event.pageX + 10}px`)
+          .style("top", `${event.pageY - 10}px`);
+          
+        // Highlight the data point
+        highlightPoint(closestPoint, false);
+      }
+    })
+    .on("mouseout", function() {
+      // Hide tooltip
+      d3.select("#tooltip-bvp").style("opacity", 0);
+      
+      // Remove point highlights
+      svg.selectAll(".highlight-point").remove();
+    });
+}
+
+// Function to determine if a point is a peak, valley, or neither
+function determinePeakOrValley(point, dataArray) {
+  const index = dataArray.findIndex(d => d.time_s === point.time_s);
+  
+  // Need points before and after to determine peak/valley
+  if (index <= 0 || index >= dataArray.length - 1) {
+    return "Normal";
+  }
+  
+  const prevPoint = dataArray[index - 1];
+  const nextPoint = dataArray[index + 1];
+  
+  // Check for peak
+  if (point.bvp > prevPoint.bvp && point.bvp > nextPoint.bvp) {
+    return "Peak";
+  }
+  
+  // Check for valley
+  if (point.bvp < prevPoint.bvp && point.bvp < nextPoint.bvp) {
+    return "Valley";
+  }
+  
+  return "Normal";
+}
+
+// Function to highlight a specific point on the chart
+function highlightPoint(point, isPrediction) {
+  // Remove any existing highlight
+  svg.selectAll(".highlight-point").remove();
+  
+  // Add a highlight circle
+  svg.append("circle")
+    .attr("class", "highlight-point")
+    .attr("cx", xScale(point.time_s))
+    .attr("cy", yScale(point.bvp))
+    .attr("r", 6)
+    .attr("fill", isPrediction ? "purple" : getPhaseColor(point.phase))
+    .attr("stroke", "white")
+    .attr("stroke-width", 2)
+    .style("pointer-events", "none")
+    .style("opacity", 0.8);
+}
+
+
 // Visualize the predictions on the chart with improved readability
+
 function visualizePredictions(predictions) {
+    // Store predictions globally so tooltip can access them
+    window.predictions = predictions;
+    
     // Remove old predictions
     svg.selectAll(".prediction-line").remove();
     svg.selectAll(".prediction-point").remove();
     svg.selectAll(".prediction-label").remove();
+    svg.selectAll(".prediction-interval").remove();
     
     // Add predicted line with gradient color
     const predictionLine = d3.line()
         .defined(d => !isNaN(d.time_s) && !isNaN(d.bvp))
         .x(d => xScale(d.time_s))
         .y(d => yScale(d.bvp))
-        .curve(d3.curveCatmullRom); // Smoother curve
+        .curve(d3.curveCatmullRom);
     
     // Create gradient for prediction line
     const gradient = svg.append("linearGradient")
@@ -629,14 +624,13 @@ function visualizePredictions(predictions) {
         .attr("fill", "rgba(128, 0, 128, 0.1)")
         .attr("d", areaGenerator);
     
-    // Add key prediction points with labels
+    // Add key prediction points
     const keyPoints = [
-        predictions[0],                                      // First point
-        predictions[Math.floor(predictions.length / 2)],     // Middle point
-        predictions[predictions.length - 1]                  // Last point
+        predictions[0],
+        predictions[Math.floor(predictions.length / 2)],
+        predictions[predictions.length - 1]
     ];
     
-    // Add key prediction points with improved visualization
     svg.selectAll(".prediction-key-point")
         .data(keyPoints)
         .enter()
@@ -659,70 +653,7 @@ function visualizePredictions(predictions) {
         .attr("fill", "purple")
         .attr("font-size", "12px")
         .attr("font-weight", "bold");
-    
-    // Add transparent event catcher for tooltips
-    svg.append("rect")
-    .attr("class", "prediction-overlay")
-    .attr("width", width)
-    .attr("height", height)
-    .style("fill", "none")
-    .style("pointer-events", "all")
-    .on("mousemove", function(event) {
-        const [mouseX] = d3.pointer(event);
-        const hoveredTime = xScale.invert(mouseX);
-        
-        // Check if we're hovering over actual data or prediction
-        if (hoveredTime > predictions[0].time_s) {
-            // Find the closest prediction point
-            const closestPoint = predictions.reduce((prev, curr) =>
-                Math.abs(curr.time_s - hoveredTime) < Math.abs(prev.time_s - hoveredTime) ? curr : prev
-            );
-            
-            // Show prediction tooltip
-            d3.select("#tooltip-bvp")
-                .style("opacity", 1)
-                .html(`
-                    <div style="font-weight: bold; margin-bottom: 5px; color: white;">Prediction</div>
-                    <div style="color: white;">Time: ${closestPoint.time_s.toFixed(2)}s</div>
-                    <div style="color: white;">BVP: ${closestPoint.bvp.toFixed(3)}</div>
-                    <div style="color: white;">Estimated Phase: 
-                        <span style="font-weight: bold; color: ${closestPoint.bvp > 0.7 ? '#ffcc00' : '#99ff99'}">
-                            ${closestPoint.bvp > 0.7 ? 'Potential Stress' : 'Normal'}
-                        </span>
-                    </div>
-                `)
-                .style("left", `${event.pageX + 10}px`)
-                .style("top", `${event.pageY - 10}px`)
-                .style("background-color", "rgba(128, 0, 128, 0.85)")
-                .style("box-shadow", "2px 2px 6px rgba(0,0,0,0.2)");
-        } else {
-            // Find the closest actual data point
-            const closestPoint = data.reduce((prev, curr) =>
-                Math.abs(curr.time_s - hoveredTime) < Math.abs(prev.time_s - hoveredTime) ? curr : prev
-            );
-            
-            // Get phase with proper formatting
-            const phase = closestPoint.phase || "Unknown";
-            const phaseColor = getPhaseColor(phase);
-            
-            // Show regular data tooltip
-            d3.select("#tooltip-bvp")
-                .style("opacity", 1)
-                .html(`
-                    <div style="font-weight: bold; margin-bottom: 5px;">BVP Data Point</div>
-                    <div>Time: ${closestPoint.time_s.toFixed(2)}s</div>
-                    <div>BVP: ${closestPoint.bvp.toFixed(3)}</div>
-                    <div>Phase: <span style="color: ${phaseColor}; font-weight: bold;">${phase}</span></div>
-                `)
-                .style("left", `${event.pageX + 10}px`)
-                .style("top", `${event.pageY - 10}px`)
-                .style("background-color", "#fff")
-                .style("color", "#333")
-                .style("border", "1px solid #ddd");
-        }
-    })
-    .on("mouseout", () => d3.select("#tooltip-bvp").style("opacity", 0));
-}   
+} 
 
 
     // Initial render with empty data
@@ -743,19 +674,56 @@ function visualizePredictions(predictions) {
 
     // Start animation function
   // Start animation function
-function startAnimation() {
-    clearInterval(autoPlayInterval); // Clear any existing interval first
+  function startAnimation() {
+    clearInterval(autoPlayInterval);
     autoPlayInterval = setInterval(autoPlay, animationSpeed);
     d3.select("#play-pause-btn").text("Pause");
     isPlaying = true;
+
+    // 🔴 Hide tooltip when animation starts
+    tooltip.style("opacity", 0);
 }
 
-    // Pause animation function
-    function pauseAnimation() {
-        clearInterval(autoPlayInterval);
-        d3.select("#play-pause-btn").text("Play");
-        isPlaying = false;
-    }
+function pauseAnimation() {
+    clearInterval(autoPlayInterval);
+    d3.select("#play-pause-btn").text("Play");
+    isPlaying = false;
+
+    // ✅ Allow tooltip to show again when hovering
+    mouseArea.on("mousemove", function(event) {
+        const [mouseX] = d3.pointer(event);
+        const hoveredTime = xScale.invert(mouseX);
+
+        const closestPoint = data.reduce((prev, curr) =>
+            Math.abs(curr.time_s - hoveredTime) < Math.abs(prev.time_s - hoveredTime) ? curr : prev
+        );
+
+        if (!closestPoint) return;
+
+        console.log("✅ Tooltip should show:", closestPoint);
+
+        // Get the bounding box of the chart container
+        const container = document.getElementById("bvp-container").getBoundingClientRect();
+
+        // Adjust position relative to the chart
+        const tooltipX = Math.min(event.clientX - container.left + 20, container.width - 250);
+        const tooltipY = Math.min(event.clientY - container.top + 20, container.height - 100);
+
+        tooltip
+            .style("opacity", 1)
+            .style("left", `${tooltipX}px`)
+            .style("top", `${tooltipY}px`)
+            .html(`
+                <div style="font-weight: bold; margin-bottom: 8px;">
+                    BVP Data Point
+                </div>
+                <div><strong>Time:</strong> ${closestPoint.time_s.toFixed(2)}s</div>
+                <div><strong>BVP Value:</strong> ${closestPoint.bvp.toFixed(3)}</div>
+                <div><strong>Arousal Phase:</strong> <span style="color:#ff3333; font-weight: bold;">${closestPoint.phase}</span></div>
+            `);
+    });
+}
+
 
     // Auto-play function with smoother transitions
     function autoPlay() {
@@ -767,6 +735,12 @@ function startAnimation() {
             
             // Update slider position (without triggering its event)
             timeSlider.property("value", currentTime);
+            
+            // Get filtered data and update trend line
+            const filteredData = data.filter(d => d.time_s <= currentTime);
+            if (filteredData.length > 5) {
+                updateTrendLineOnly(filteredData);
+            }
         } else {
             pauseAnimation();
             currentTime = minTime; // Reset to beginning
@@ -791,6 +765,7 @@ function startAnimation() {
                 .attr("d", line);
         } else {
             xAxis.call(d3.axisBottom(xScale));
+            updateTrendLineOnly(data);
             
             svg.select(".bvp-line")
                 .datum(filteredData)
@@ -825,10 +800,10 @@ function startAnimation() {
         // Get the last N points for a moving trend line (more responsive to recent changes)
         const lastNPoints = Math.min(30, filteredData.length);
         const recentData = filteredData.slice(-lastNPoints);
-        
-        // Only update trend line and stats if we have enough data points
-        if (recentData.length >= 5) {
-            // Update trend line only (without full statistics panel refresh for performance)
+
+        // Always update trend line if we have enough data points
+        if (recentData.length >= 2) {
+        // Update trend line only (without full statistics panel refresh for performance)
             updateTrendLineOnly(recentData);
         }
     }
@@ -909,74 +884,86 @@ function startAnimation() {
 
     // Function to update chart based on condition
     // Modified updateChart function to fix the blank chart issue
-    // Modified updateChart function to fix the blank chart issue
-function updateChart(condition) {
-    console.log(`⚠️ Chart updating for condition: "${condition}"`);
-    
-    // Start from the original complete dataset
-    let filteredData;
-    
-    // Since there's no "all" option anymore, directly filter by condition
-    filteredData = originalData.filter(d => {
-        if (!d.phase) return false;
+    function updateChart(condition) {
+        console.log(`⚠️ Chart updating for condition: "${condition}"`);
         
-        // Case-insensitive exact match for our target conditions
-        return d.phase.toUpperCase() === condition.toUpperCase();
-    });
-    
-    // Debug log
-    console.log(`Filtered data for condition "${condition}": ${filteredData.length} points`);
-    
-    if (filteredData.length === 0) {
-        console.error(`❌ No data found for condition: ${condition}`);
-        alert(`No data found for condition: ${condition}. Check console for details.`);
-        return;
+        // Start from the original complete dataset
+        let filteredData;
+        
+        // Since there's no "all" option anymore, directly filter by condition
+        filteredData = originalData.filter(d => {
+            if (!d.phase) return false;
+            
+            // Case-insensitive exact match for our target conditions
+            return d.phase.toUpperCase() === condition.toUpperCase();
+        });
+        
+        // Debug log
+        console.log(`Filtered data for condition "${condition}": ${filteredData.length} points`);
+        
+        if (filteredData.length === 0) {
+            console.error(`❌ No data found for condition: ${condition}`);
+            alert(`No data found for condition: ${condition}. Check console for details.`);
+            return;
+        }
+        
+        // Update domains
+        xScale.domain(d3.extent(filteredData, d => d.time_s));
+        yScale.domain(d3.extent(filteredData, d => d.bvp));
+        
+        // Update axes
+        xAxis.transition().duration(500).call(d3.axisBottom(xScale));
+        yAxis.transition().duration(500).call(d3.axisLeft(yScale));
+        
+        // Update line class for proper styling - add the condition class
+        svg.select(".bvp-line")
+            .attr("class", `bvp-line ${condition.toLowerCase()}`);
+        
+        // Update line data
+        svg.select(".bvp-line")
+            .datum(filteredData)
+            .transition()
+            .duration(500)
+            .attr("d", line);
+        
+        // Reset animation state
+        currentTime = minTime = d3.min(filteredData, d => d.time_s);
+        maxTime = d3.max(filteredData, d => d.time_s);
+        
+        // Update slider with new range
+        const timeSlider = d3.select("#time-slider")
+            .attr("min", minTime)
+            .attr("max", maxTime)
+            .property("value", currentTime);
+        
+        pauseAnimation();
+        
+        // Use the filtered data for current visualization
+        data = filteredData;
+        
+        // Reset any predictions
+        svg.selectAll(".prediction-line").remove();
+        svg.selectAll(".prediction-point").remove();
+        svg.selectAll(".prediction-interval").remove();
+        svg.selectAll(".prediction-label").remove();
+        d3.select("#stress-prediction").html("Stress Prediction: N/A");
+        
+        // Update statistics panel with initial data
+        const initialData = filteredData.filter(d => d.time_s <= minTime + 5);
+        updateStatistics(initialData);
+        
+        // Update time display
+        d3.select("#time-display").text(`Current Time: ${currentTime.toFixed(2)}s`);
+        
+        // Update trend line with the filtered data
+        if (filteredData.length >= 2) {
+            updateTrendLineOnly(filteredData);
+        }
     }
-    
-    // Update domains
-    xScale.domain(d3.extent(filteredData, d => d.time_s));
-    yScale.domain(d3.extent(filteredData, d => d.bvp));
-    
-    // Update axes
-    xAxis.transition().duration(500).call(d3.axisBottom(xScale));
-    yAxis.transition().duration(500).call(d3.axisLeft(yScale));
-    
-    // Update line class for proper styling - add the condition class
-    svg.select(".bvp-line")
-        .attr("class", `bvp-line ${condition.toLowerCase()}`);
-    
-    // Update line data
-    svg.select(".bvp-line")
-        .datum(filteredData)
-        .transition()
-        .duration(500)
-        .attr("d", line);
-    
-    // Reset animation state
-    currentTime = minTime = d3.min(filteredData, d => d.time_s);
-    maxTime = d3.max(filteredData, d => d.time_s);
-    
-    // Update slider with new range
-    const timeSlider = d3.select("#time-slider")
-        .attr("min", minTime)
-        .attr("max", maxTime)
-        .property("value", currentTime);
-    
-    pauseAnimation();
-    
-    // Use the filtered data for current visualization
-    data = filteredData;
-    
-    // Reset any predictions
-    svg.selectAll(".prediction-line").remove();
-    svg.selectAll(".prediction-point").remove();
-    svg.selectAll(".prediction-interval").remove();
-    svg.selectAll(".prediction-label").remove();
-    d3.select("#stress-prediction").html("Stress Prediction: N/A");
-    
-    // Update time display
-    d3.select("#time-display").text(`Current Time: ${currentTime.toFixed(2)}s`);
-}
+
+    function updateStatistics(filteredData) {
+    // Intentionally empty
+    }
     // Predict future stress levels using simple moving average with trend detection
     // Predict future stress levels using simple moving average with trend detection
 function predictStress(windowSize = 20, predictionSteps = 10) {
@@ -1193,12 +1180,44 @@ if (!speedSlider.empty()) {
     // Setup reset button if it exists
     const resetBtn = d3.select("#reset-btn");
     if (!resetBtn.empty()) {
+        // Update the reset button handler);
         resetBtn.on("click", function() {
-            currentTime = minTime;
-            timeSlider.property("value", currentTime);
-            updateChartForTime(currentTime);
-            pauseAnimation();
-        });
+    // Reset current time
+    currentTime = minTime;
+    timeSlider.property("value", currentTime);
+    
+    // Clear ALL visualization elements
+    svg.selectAll(".trend-line").remove();
+    svg.selectAll(".prediction-line").remove();
+    svg.selectAll(".prediction-point").remove();
+    svg.selectAll(".prediction-interval").remove();
+    svg.selectAll(".prediction-label").remove();
+    svg.selectAll(".highlight-point").remove();
+    
+    // Reset predictions
+    window.predictions = null;
+    
+    // Clear stress prediction
+    d3.select("#stress-prediction").html("Stress Prediction: N/A");
+    
+    // Update the chart with minimal data
+    const filteredData = data.filter(d => d.time_s <= minTime);
+    
+    // Update domain dynamically
+    xScale.domain([minTime, minTime + 5]); // Show 5s window
+    xAxis.call(d3.axisBottom(xScale));
+    
+    // Update data line
+    svg.select(".bvp-line")
+        .datum(filteredData)
+        .attr("d", line);
+    
+    // Update time display
+    d3.select("#time-display").text(`Current Time: ${minTime.toFixed(2)}s`);
+    
+    // Stop animation
+    pauseAnimation();
+});
     }
 
     // Setup predict button if it exists
@@ -1365,9 +1384,33 @@ function makeStatsPanelDraggable() {
         document.onmousemove = null;
     }
 }
+function initializeEnhancedTooltips() {
+    console.log("🔧 Initializing enhanced tooltips...");
+    const tooltip = d3.select("#tooltip-bvp");
 
-// Call this after the stats panel is created
-setTimeout(makeStatsPanelDraggable, 1000);
+    if (tooltip.empty()) {
+        console.error("❌ Tooltip element #tooltip-bvp is missing from the HTML!");
+        return;
+    }
+
+    tooltip.style("opacity", 0)
+        .style("position", "absolute")
+        .style("background-color", "white")
+        .style("border", "1px solid #ddd")
+        .style("border-radius", "8px")
+        .style("padding", "10px")
+        .style("box-shadow", "0 4px 15px rgba(0, 0, 0, 0.2)")
+        .style("pointer-events", "none")
+        .style("z-index", "1000");
+
+    console.log("✅ Enhanced tooltips initialized.");
+}
+
+setTimeout(initializeEnhancedTooltips, 1000);
+setupTooltipHandlers();
+
+// Select the first condition by default
+d3.select("#bvpConditionSelect").property("value", uniquePhases[0]);
 
 }).catch(error => console.error("Error loading CSV:", error));
 
