@@ -106,7 +106,7 @@
     max-width: 1000px;
     margin: 20px auto 30px;
     padding: 20px 24px;
-    background: linear-gradient(to right, #f8f9fa, #f0f4f8);
+    background: #ffff;
     border-radius: 12px;
     display: flex;
     flex-direction: column;

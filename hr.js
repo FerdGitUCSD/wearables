@@ -1,5 +1,5 @@
 // Chart dimensions
-const margin = { top: 30, right: 30, bottom: 80, left: 60 },
+const margin = { top: 30, right: 60, bottom: 80, left: 60 },
       width = 960 - margin.left - margin.right,
       height = 400 - margin.top - margin.bottom;
 
@@ -740,7 +740,7 @@ function drawTimeline(condition, protocol) {
         const y = timelineHeight / 2 + 25;
         return rotation ? `rotate(${rotation},${x},${y})` : null;
       })
-      .style("font-size", "10px")
+      .style("font-size", "11px")
       .style("font-weight", "bold")
       // In drawTimeline, modify the label text function
       .text(d => {
@@ -775,7 +775,7 @@ function drawTimeline(condition, protocol) {
         .attr("x", d => xScale(d.start + (d.end - d.start) / 2))
         .attr("y", timelineHeight / 2 + 30)
         .attr("text-anchor", "middle")
-        .style("font-size", "9px")
+        .style("font-size", "11px")
         .text(d => {
             const minutes = Math.floor(d.duration / 60);
             const seconds = d.duration % 60;

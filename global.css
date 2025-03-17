@@ -18,3 +18,98 @@ p {
     text-indent: 35px;
     text-align: justify;
 }
+
+
+/* Section Separation Styles */
+
+/* Add a consistent section style to all main components */
+#hr1, #bvp1, #eda1, #chart-container {
+    margin: 40px 0;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background-color: white;
+    position: relative;
+  }
+  
+  /* Add section dividers */
+  #hr1, #bvp1, #eda1 {
+    border-bottom: 1px solid #eaeaea;
+    padding-bottom: 30px;
+    margin-bottom: 40px;
+  }
+  
+  /* Create a distinct visual style for each section */
+  #hr1 {
+    border-top: 5px solid #e74c3c; /* Red for heart rate (swapped with BVP) */
+    border-left: none;
+    background-color: #fef7f7;
+  }
+  
+  #bvp1 {
+    border-top: 5px solid #3498db; /* Blue for blood volume pulse (swapped with HR) */
+    border-left: none;
+    background-color: #f7fbfe;
+  }
+  
+  #eda1 {
+    border-top: 5px solid #2ecc71; /* Green for electrodermal activity */
+    border-left: none;
+    background-color: #f7fefa;
+  }
+  
+  #chart-container {
+    border-top: 5px solid #f39c12; /* Orange for temperature */
+    border-left: none;
+    background-color: #fefaf7;
+  }
+  
+  /* Enhance section headings */
+  #hr1 h2, #bvp1 h2, #eda1 h2, h2:has(+ #chart-container) {
+    margin-top: 0;
+    padding-bottom: 10px;
+    border-bottom: 1px dotted #ddd;
+    color: #333;
+  }
+  
+  /* Add subtle transition effects */
+  #hr1, #bvp1, #eda1, #chart-container {
+    transition: box-shadow 0.3s ease;
+  }
+  
+  #hr1:hover, #bvp1:hover, #eda1:hover, #chart-container:hover {
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  }
+  
+  /* Improve spacing between sections and paragraphs */
+  p {
+    margin-top: 20px;
+    line-height: 1.6;
+  }
+  
+  /* Make sure controls are consistently styled */
+  .control-panel, #controls, #eda-dropdown, #eda-gender-dropdown, #activity-legend {
+    margin-bottom: 15px;
+    padding: 10px;
+    background-color: #f8f8f8;
+    border-radius: 4px;
+  }
+  
+  /* For temperature section which has a different structure */
+  h2:has(+ #chart-container) {
+    margin-bottom: 15px;
+  }
+
+.control-panel {
+    background-color: #ffff;
+    border-color:#777;
+    border: 1px solid #ddd;
+}
+  
+  /* Add responsive styling */
+  @media (max-width: 768px) {
+    #hr1, #bvp1, #eda1, #chart-container {
+      padding: 15px;
+      margin: 25px 0;
+    }
+  }
