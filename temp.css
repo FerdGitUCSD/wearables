@@ -1,5 +1,5 @@
 #chart-container {
-    width: 900px;
+    width: 1000px;
     margin: 0 auto;
     text-align: center;
     font-family: 'Segoe UI', Arial, sans-serif;
@@ -142,7 +142,6 @@
 
 input[type=range] {
     height: 25px;
-    /* -webkit-appearance: none; */
     margin: 10px 0;
     width: 200px;
     background: transparent;

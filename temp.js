@@ -46,7 +46,7 @@ d3.csv('data/combined_temperature_data2.csv').then(function(data) {
 
     // Set up SVG container for thermometer view
     const margin = { top: 20, right: 200, bottom: 100, left: 100 }; // Increased bottom margin
-    const width = 900 - margin.left - margin.right;
+    const width = 1000 - margin.left - margin.right;
     const height = 600 - margin.top - margin.bottom;
 
     const svg = d3.select('#temp-chart')
@@ -249,7 +249,7 @@ d3.csv('data/combined_temperature_data2.csv').then(function(data) {
         .attr('x1', 0)
         .attr('y1', 0)
         .attr('x2', 0)
-        .attr('y2', height - 50)
+        .attr('y2', height + 24)
         .attr('stroke', '#ff0000')
         .attr('stroke-width', 2)
         .attr('stroke-dasharray', '5,5');
@@ -388,14 +388,17 @@ d3.csv('data/combined_temperature_data2.csv').then(function(data) {
                 const mercuryHeight = thermHeight - tempScale(temp);
                 const mercury = mercuryElements[condition].tube;
                 const bulbMercury = mercuryElements[condition].bulb;
+
+                // Adjust opacity based on the number of selected sessions
+                const opacity = selectedSessions.length > 1 ? 0.6 : 1; // Semi-transparent for multiple sessions
                 
                 mercury.transition()
                         .duration(animationSpeed * 0.8) // Make transition slightly faster than animation speed
                         .attr('y', tempScale(temp))
                         .attr('height', mercuryHeight)
-                        .attr('opacity', 1);
+                        .attr('opacity', opacity);
                 
-                bulbMercury.attr('opacity', 1);
+                bulbMercury.attr('opacity', opacity);
                 
                 // Update temperature value display
                 d3.select('#temp-value')
@@ -502,7 +505,7 @@ d3.csv('data/combined_temperature_data2.csv').then(function(data) {
                     .attr('x', timeScale(currentPhase.start))
                     .attr('y', 0)
                     .attr('width', timeScale(currentPhase.end) - timeScale(currentPhase.start))
-                    .attr('height', height - 50)
+                    .attr('height', height + 24)
                     .attr('fill', colorScale(condition))
                     .attr('opacity', 0.2);
                 
@@ -510,7 +513,7 @@ d3.csv('data/combined_temperature_data2.csv').then(function(data) {
                 svg.append('text')
                     .attr('class', 'phase-highlight')
                     .attr('x', timeScale(currentPhase.start) + 5)
-                    .attr('y', 20)
+                    .attr('y', 10)
                     .text(`Phase: ${currentPhase.label}`)
                     .attr('fill', '#333')
                     .attr('font-weight', 'bold');
