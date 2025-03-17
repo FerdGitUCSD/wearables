@@ -75,7 +75,7 @@ d3.csv('data/combined_temperature_data2.csv').then(function(data) {
         .range([0, width]);
     
     const tempScale = d3.scaleLinear()
-        .domain([30, 35]) // Temperature range from your original scale
+        .domain([30, 36]) // Temperature range from your original scale
         .range([thermHeight, 0]);
     
     const timeAxis = svg.append('g')
@@ -179,7 +179,7 @@ d3.csv('data/combined_temperature_data2.csv').then(function(data) {
     thresholds.forEach(threshold => {
         // Add threshold line
         svg.append('line')
-            .attr('x1', 0)
+            .attr('x1', width / 2 + thermWidth / 3)
             .attr('y1', tempScale(threshold.temp))
             .attr('x2', width)
             .attr('y2', tempScale(threshold.temp))
@@ -360,7 +360,8 @@ d3.csv('data/combined_temperature_data2.csv').then(function(data) {
     // Function to update the thermometer based on the current time
     function updateThermometer(time) {
         // Update time indicator position
-        timeIndicator.attr('x1', timeScale(time))
+        timeIndicator
+            .attr('x1', timeScale(time))
             .attr('x2', timeScale(time));
         
         // Update time display
@@ -456,31 +457,31 @@ d3.csv('data/combined_temperature_data2.csv').then(function(data) {
     }
 
     // Function to get description for phases
-function getPhaseDescription(phaseName) {
-    const descriptions = {
-        'Baseline': 'Initial resting period',
-        'Warm up': 'Gradual exercise start',
-        'Sprint 1': 'First high-intensity interval',
-        'Sprint 2': 'Second high-intensity interval',
-        'Sprint 3': 'Third high-intensity interval',
-        'Sprint 4': 'Fourth high-intensity interval',
-        'Cool Down': 'Reducing intensity period',
-        'Rest': 'Final recovery period',
-        '70 rpm': 'Pedaling at 70 revolutions/minute',
-        '75 rpm': 'Pedaling at 75 revolutions/minute',
-        '80 rpm': 'Pedaling at 80 revolutions/minute',
-        '85 rpm': 'Pedaling at 85 revolutions/minute',
-        '90/95 rpm': 'Pedaling at 90-95 revolutions/minute',
-        'TMCT': 'Toronto Modified Consonant Trigrams test',
-        'First Rest': 'Initial recovery period',
-        'Real Opinion': 'Expressing genuine viewpoint',
-        'Opposite Opinion': 'Expressing contrary viewpoint',
-        'Second Rest': 'Secondary recovery period',
-        'Subtract Test': 'Mental arithmetic task'
-    };
-    
-    return descriptions[phaseName] || 'No description available';
-}
+    function getPhaseDescription(phaseName) {
+        const descriptions = {
+            'Baseline': 'Initial resting period',
+            'Warm up': 'Gradual exercise start',
+            'Sprint 1': 'First high-intensity interval',
+            'Sprint 2': 'Second high-intensity interval',
+            'Sprint 3': 'Third high-intensity interval',
+            'Sprint 4': 'Fourth high-intensity interval',
+            'Cool Down': 'Reducing intensity period',
+            'Rest': 'Final recovery period',
+            '70 rpm': 'Pedaling at 70 revolutions/minute',
+            '75 rpm': 'Pedaling at 75 revolutions/minute',
+            '80 rpm': 'Pedaling at 80 revolutions/minute',
+            '85 rpm': 'Pedaling at 85 revolutions/minute',
+            '90/95 rpm': 'Pedaling at 90-95 revolutions/minute',
+            'TMCT': 'Toronto Modified Consonant Trigrams test',
+            'First Rest': 'Initial recovery period',
+            'Real Opinion': 'Expressing genuine viewpoint',
+            'Opposite Opinion': 'Expressing contrary viewpoint',
+            'Second Rest': 'Secondary recovery period',
+            'Subtract Test': 'Mental arithmetic task'
+        };
+        
+        return descriptions[phaseName] || 'No description available';
+    }
     
     // Function to create/update the phase highlights
     function updatePhaseHighlight(condition, time) {
@@ -643,7 +644,14 @@ function getPhaseDescription(phaseName) {
         });
     });
 
-    // Function to update selection
+    // First, determine the maximum time for each condition
+    const conditionMaxTimes = {};
+    conditions.forEach(condition => {
+        const conditionData = data.filter(d => d.condition === condition);
+        conditionMaxTimes[condition] = d3.max(conditionData, d => d.time);
+    });
+
+    // Modify your updateSelection function to update the x-axis
     function updateSelection(condition, isSelected) {
         if (isSelected) {
             selectedSessions.push(condition);
@@ -665,203 +673,46 @@ function getPhaseDescription(phaseName) {
                 .attr("opacity", isSelected ? 1 : 0);
         });
 
-        // Update phase highlight if needed
+        // Calculate new x-axis domain based on selected sessions
+        let newMaxTime = 0;
+        if (selectedSessions.length === 1) {
+            // If only one session is selected, use its max time
+            newMaxTime = conditionMaxTimes[selectedSessions[0]];
+        } else if (selectedSessions.length > 1) {
+            // If multiple sessions are selected, use the maximum of all selected
+            newMaxTime = d3.max(selectedSessions, s => conditionMaxTimes[s]);
+        } else {
+            // If no sessions are selected, use the overall max
+            newMaxTime = d3.max(conditions, c => conditionMaxTimes[c]);
+        }
+
+        // Update the time scale with new domain
+        timeScale.domain([0, newMaxTime]);
+        
+        // Transition the x-axis to the new scale
+        svg.select(".x-axis")
+            .transition()
+            .duration(750)
+            .call(d3.axisBottom(timeScale));
+        
+        // Update the phase highlights and other elements that depend on the time scale
         if (selectedSessions.length === 1) {
             updatePhaseHighlight(selectedSessions[0], currentTime);
         } else {
             svg.selectAll(".phase-highlight").remove();
         }
 
-        // Update current phase info
-        updateThermometer(currentTime);
-    }
-    // // Create an enhanced legend for condition selection inside the SVG
-    // const legend = svg.append('g')
-    // .attr('class', 'legend')
-    // .attr('transform', `translate(${width - 200}, 20)`); // Adjust the position as needed
-
-    // // Add legend title
-    // legend.append('text')
-    // .attr('x', 0)
-    // .attr('y', 0)
-    // .attr('font-weight', 'bold')
-    // .attr('font-size', '16px')
-    // .text('Activity Types');
-
-    // // Add description
-    // legend.append('text')
-    // .attr('x', 0)
-    // .attr('y', 20)
-    // .attr('font-size', '12px')
-    // .attr('fill', '#666')
-    // .text('Select one or more activities to compare temperature responses:');
-
-    // // Create condition descriptions
-    // const conditionDescriptions = {
-    // 'AEROBIC': 'Steady-state cardio exercise',
-    // 'ANAEROBIC': 'High-intensity interval training',
-    // 'STRESS': 'Mental stress test activities'
-    // };
-
-    // // Add checkboxes for each condition with visual feedback
-    // conditions.forEach((condition, i) => {
-    //     const conditionContainer = legend.append('g')
-    //         .attr('transform', `translate(0, ${40 + i * 40})`); // Adjust spacing as needed
-
-    //     const label = conditionContainer.append('g')
-    //         .attr('class', 'legend-label')
-    //         .attr('cursor', 'pointer')
-    //         .on('click', function () {
-    //             const checkbox = d3.select(this).select('.checkbox');
-    //             const isChecked = checkbox.classed('checked');
-
-    //             // Toggle the checked state
-    //             checkbox.classed('checked', !isChecked);
-
-    //             // Update the selection
-    //             updateSelection(condition, !isChecked);
-    //         });
-
-    //     // Add checkbox (as a rectangle)
-    //     label.append('rect')
-    //     .attr('class', 'checkbox')
-    //     .attr('x', 0)
-    //     .attr('y', 0)
-    //     .attr('width', 15)
-    //     .attr('height', 15)
-    //     .attr('fill', '#fff')
-    //     .attr('stroke', '#000')
-    //     .attr('stroke-width', 1);
-
-    //     // Add checkmark (hidden by default)
-    //     label.append('text')
-    //         .attr('class', 'checkmark')
-    //         .attr('x', 3)
-    //         .attr('y', 13)
-    //         .attr('font-size', '14px')
-    //         .attr('fill', '#000')
-    //         .text('✓') // Checkmark symbol
-    //         .style('visibility', 'hidden'); // Initially hidden
-
-    //     // Add condition name with color indicator
-    //     label.append('rect')
-    //         .attr('x', 20)
-    //         .attr('y', 2)
-    //         .attr('width', 12)
-    //         .attr('height', 12)
-    //         .attr('fill', colorScale(condition))
-    //         .attr('rx', 2);
-
-    //     label.append('text')
-    //         .attr('x', 40)
-    //         .attr('y', 12)
-    //         .attr('font-weight', 'bold')
-    //         .text(condition);
-
-    //     // Add condition description
-    //     label.append('text')
-    //         .attr('x', 40)
-    //         .attr('y', 28)
-    //         .attr('font-size', '11px')
-    //         .attr('fill', '#666')
-    //         .text(conditionDescriptions[condition] || '');
-    // });
-
-    // // Function to update checkbox appearance
-    // function toggleCheckbox(checkbox, isChecked) {
-    //     checkbox.classed('checked', isChecked);
-
-    //     // Show/hide the checkmark
-    //     checkbox.attr('fill', isChecked ? '#00CC00' : '#fff'); // Green when checked, white when unchecked
-    // }
-
-    // // Function to update selection
-    // function updateSelection(condition, isSelected) {
-    //     if (isSelected) {
-    //         selectedSessions.push(condition);
-    //     } else {
-    //         selectedSessions = selectedSessions.filter(c => c !== condition);
-    //     }
-
-    //     // Update visibility of mercury for each condition
-    //     conditions.forEach(c => {
-    //         const isSelected = selectedSessions.includes(c);
-    //         mercuryElements[c].tube
-    //             .transition()
-    //             .duration(300)
-    //             .attr('opacity', isSelected ? 1 : 0);
-
-    //         mercuryElements[c].bulb
-    //             .transition()
-    //             .duration(300)
-    //             .attr('opacity', isSelected ? 1 : 0);
-    //     });
-
-    //     // Update phase highlight if needed
-    //     if (selectedSessions.length === 1) {
-    //         updatePhaseHighlight(selectedSessions[0], currentTime);
-    //     } else {
-    //         svg.selectAll('.phase-highlight').remove();
-    //     }
-
-    //     // Update current phase info
-    //     updateThermometer(currentTime);
-    // }
-    
-
-    
-    // Add a compare button to quickly toggle between single/multiple selection
-    legend.append('button')
-        .attr('id', 'compare-button')
-        .style('width', '100%')
-        .style('padding', '8px')
-        .style('margin-top', '10px')
-        .style('border-radius', '4px')
-        .style('background-color', '#f0f0f0')
-        .style('border', '1px solid #ddd')
-        .style('cursor', 'pointer')
-        .text('Compare All')
-        .on('click', function() {
-            const allChecked = conditions.every(c => 
-                d3.select(`#checkbox-${c}`).property('checked'));
-            
-            if (allChecked) {
-                // If all are selected, keep only the first one
-                conditions.forEach((c, i) => {
-                    d3.select(`#checkbox-${c}`).property('checked', i === 0);
-                });
-                d3.select(this).text('Compare All');
-            } else {
-                // Otherwise select all
-                conditions.forEach(c => {
-                    d3.select(`#checkbox-${c}`).property('checked', true);
-                });
-                d3.select(this).text('Show Single');
-            }
-            
-            // Trigger the change event on the first checkbox to update the view
-            d3.select(`#checkbox-${conditions[0]}`).dispatch('change');
-        });
+        // If the current time is beyond the new max time, reset it
+        if (currentTime > newMaxTime) {
+            currentTime = 0;
+            updateThermometer(currentTime);
+        } else {
+            // Otherwise, just update with the current time
+            updateThermometer(currentTime);
+        }
         
-    // Add temperature value display
-    controlPanel.append('div')
-        .attr('id', 'temp-display')
-        .style('margin', '10px 20px')
-        .style('padding', '8px 15px')
-        .style('background', '#fff')
-        .style('border-radius', '4px')
-        .style('font-weight', 'bold')
-        .style('min-width', '120px')
-        .style('text-align', 'center');
-    
-    // Add temperature value in the display
-    d3.select('#temp-display')
-        .append('span')
-        .attr('id', 'temp-value')
-        .style('font-size', '16px')
-        .text('--°C');
-    // Initialize temperature value
-    d3.select('#temp-value').text('--°C');  
-    // Initialize with first frame
-    updateThermometer(0);
+        // Update any other elements that rely on the time scale
+        // For example, phase markers, grid lines, etc.
+        updatePhaseMarkers();
+    }
 });
