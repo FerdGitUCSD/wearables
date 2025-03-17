@@ -1,6 +1,7 @@
 #eda-chart {
     width: 900px;
     height: 500px;
+    margin: 0 auto; 
 }
 
 .slider-container {
@@ -98,6 +99,7 @@
   stroke-width: 1.5px;
   r: 5; 
   pointer-events: none; 
+}
 
 .eda-threshold-label {
   font-family: 'Arial', sans-serif;
@@ -183,3 +185,15 @@
   fill: #e69a2f;
 }
 
+label[for="eda-gender-dropdown"],
+label[for="eda-dropdown"] {
+    font-weight: bold;
+}
+
+.eda-description {
+  background-color: white; 
+  border: 1px solid #ddd; 
+  padding: 30px; 
+  border-radius: 10px; /* 圆角效果 */
+  box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1); 
+}

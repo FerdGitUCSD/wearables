@@ -124,6 +124,8 @@ document.addEventListener("DOMContentLoaded", function () {
             .attr("y", 40)
             .attr("fill", "black")
             .style("text-anchor", "middle")
+            .style("font-weight", "bold")
+            .style("font-size", "12px")
             .text("Timestamp (seconds)");
 
         // Draw Y-axis
@@ -136,6 +138,8 @@ document.addEventListener("DOMContentLoaded", function () {
             .attr("y", -40)
             .attr("fill", "black")
             .style("text-anchor", "middle")
+            .style("font-weight", "bold")
+            .style("font-size", "12px")
             .text("Average EDA");
 
         // Define line generator

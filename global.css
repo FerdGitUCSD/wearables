@@ -63,6 +63,7 @@ p {
   }
   
   #eda1 {
+    
     border-top: 5px solid #2ecc71; /* Green for electrodermal activity */
     border-left: none;
     background-color: #f7fefa;
