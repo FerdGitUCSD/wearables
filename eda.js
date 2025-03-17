@@ -62,7 +62,7 @@ document.addEventListener("DOMContentLoaded", function () {
             d.Experiment = d.Experiment ? d.Experiment.trim() : "Unknown"; 
         });
     
-        const experimentGroups = Array.from(new Set(edaData.map(d => d.Experiment))); // 使用正确的列名
+        const experimentGroups = Array.from(new Set(edaData.map(d => d.Experiment))); 
         console.log("Experiment Groups:", experimentGroups);
 
         const genderOptions = Array.from(new Set(edaData.map(d => d.Gender)))
@@ -182,13 +182,24 @@ document.addEventListener("DOMContentLoaded", function () {
             const linePath = edaSvg.select(".eda-line");
             const totalLength = linePath.node().getTotalLength();
             
-            // 计算当前时间的显示比例
             const progress = currentTime / edaXScale.domain()[1];
             const visibleLength = totalLength * progress;
             
-            // 使用虚线技巧显示部分线条
             linePath.style("stroke-dasharray", `${visibleLength} ${totalLength}`);
+            
+            const labelOffset = 400;
+            
+
+            // 确保 phase markers 和 labels 在正确时间显示
+            edaSvg.selectAll(".phase-marker")
+                .style("opacity", d => (d && d.start !== undefined && currentTime >= d.start - labelOffset) ? 1 : 0);
+
+            edaSvg.selectAll(".phase-label")
+                .style("opacity", d => (d && d.start !== undefined && currentTime >= d.start - labelOffset) ? 1 : 0);
+            edaSvg.selectAll(".eda-data-point").raise();
         }
+        
+        
 
         function initEDAPlayControls() {
             const playButton = d3.select("#eda-play-btn");
@@ -202,7 +213,7 @@ document.addEventListener("DOMContentLoaded", function () {
         
                 if(isPlaying) {
                     const maxTime = +d3.select("#eda-time-slider").attr("max");
-                    const duration = 15000; // 15秒完成动画
+                    const duration = 10000; 
             
                     const startTime = Date.now();
                     const startValue = +timeSlider.property("value");
@@ -210,7 +221,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     animationTimer = d3.interval(() => {
                         const elapsed = Date.now() - startTime;
                         const progress = Math.min(elapsed / duration, 1);
-                        const currentTime = startValue + (maxTime - startValue) * progress; // 使用滑块max值
+                        const currentTime = startValue + (maxTime - startValue) * progress; 
                         
                         timeSlider.property("value", currentTime);
                         updateLineVisibility(currentTime);
@@ -268,7 +279,7 @@ document.addEventListener("DOMContentLoaded", function () {
             currentPhases.sort((a,b) => (a.priority || 0) - (b.priority || 0)); 
 
             const xDomain = [
-                d3.min(currentPhases, d => d.start) || 0,  // 使用start字段
+                d3.min(currentPhases, d => d.start) || 0,  
                 d3.max(currentPhases, d => d.end) || d3.max(filteredData, d => d.timestamp)
               ];
             edaXScale.domain(xDomain);
@@ -327,6 +338,51 @@ document.addEventListener("DOMContentLoaded", function () {
              
             const bisectTime = d3.bisector(d => d.timestamp).left;
 
+
+            // 绑定数据
+            const phaseMarkers = edaSvg.selectAll(".phase-marker")
+            .data(currentPhases);
+
+            // 处理 enter + update 阶段
+            phaseMarkers.enter()
+                .append("circle")
+                .attr("class", "phase-marker")
+                .merge(phaseMarkers) 
+                .attr("cx", d => edaXScale(d.start))  
+                    .attr("cy", d => {
+                    
+                    const index = bisectTime(processedData.values, d.start, 0);
+                    return index < processedData.values.length ? edaYScale(processedData.values[index].EDA) : edaYScale(0);
+                })
+                .attr("r", 4)
+                .attr("fill", "none")      
+                .attr("stroke", "#ff5722") 
+                .attr("stroke-width", 2)
+                .style("opacity", 0);  // 初始不可见
+
+
+            const phaseLabels = edaSvg.selectAll(".phase-label")
+                .data(currentPhases);
+            
+            // 处理 enter + update 阶段
+            phaseLabels.enter()
+                .append("text")
+                .attr("class", "phase-label")
+                .merge(phaseLabels)
+                .attr("x", d => edaXScale(d.start) + 5)  // Label 偏右，避免和点重叠
+                .attr("y", d => {
+                    const index = bisectTime(processedData.values, d.start, 0);
+                    return index < processedData.values.length ? edaYScale(processedData.values[index].EDA) - 10 : edaYScale(0) - 10;
+                })
+                .attr("dy", ".35em")
+                .text(d => d.name)
+                .style("font-size", "10px")
+                .style("fill", "#333")
+                .style("font-weight", "bold")
+                .style("text-anchor", "start")
+                .style("pointer-events", "none")
+                .style("opacity", 0);  // 初始不可见
+
             
             
             currentPhases.forEach((phase, phaseIndex) => {
@@ -338,16 +394,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 const dataPoint = processedData.values[Math.min(index, processedData.values.length - 1)];
 
                 if (dataPoint) {
-                
-                edaSvg.append("circle")
-                    .attr("class", "phase-marker")
-                    .attr("cx", edaXScale(dataPoint.timestamp))
-                    .attr("cy", edaYScale(dataPoint.EDA))
-                    .attr("r", 4)
-                    .attr("fill", "none")      
-                    .attr("stroke", "#ff5722") 
-                    .attr("stroke-width", 2);
-
                 
                 
                 const labelX = edaXScale(dataPoint.timestamp) + 0; 
@@ -364,7 +410,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     .style("fill", "#333")
                     .style("font-weight", "bold")
                     .style("text-anchor", "start")
-                    .style("pointer-events", "none");
+                    .style("pointer-events", "none")
+                    .style("opacity", 0);;
                 }
             });
 
@@ -421,6 +468,8 @@ document.addEventListener("DOMContentLoaded", function () {
             thresholdLines.exit().remove();
             thresholdLabels.exit().remove();
             bands.exit().remove();
+            phaseMarkers.exit().remove();
+            phaseLabels.exit().remove();
 
 
             edaSvg.selectAll(".overlay").remove();
@@ -474,15 +523,21 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 
                 edaSvg.selectAll(".eda-data-point")
-                .data([1])
-                .join(
-                    enter => enter.append("circle")
-                        .attr("class", "eda-data-point"),
-                    update => update,
-                    exit => exit.remove()
+                    .data([1])
+                    .join(
+                        enter => enter.append("circle")
+                            .attr("class", "eda-data-point")
+                            .attr("r", 5)  // 设定小红点半径
+                            .attr("fill", "#ff3860")  // 红色
+                            .attr("stroke", "white")  // 白色边框，确保清晰
+                            .attr("stroke-width", 1.5)
+                            .style("pointer-events", "none"), // 避免影响鼠标交互
+                        update => update,
+                        exit => exit.remove()
                     )
-                .attr("cx", guideX)
-                .attr("cy", pointY);
+                    .attr("cx", guideX)
+                    .attr("cy", pointY)
+                    .raise();  // 确保它在最上层
 
             
                 guideLine.enter()
@@ -530,4 +585,3 @@ document.addEventListener("DOMContentLoaded", function () {
         
     });
 });
-

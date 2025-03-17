@@ -1,81 +1,73 @@
 #eda-chart {
-    width: 900px;
-    height: 500px;
-    margin: 0 auto; 
+  width: 900px;
+  height: 500px;
+  margin: 0 auto;
 }
 
 .slider-container {
-    margin: 15px 0;
-  }
-  input[type="range"] {
-    vertical-align: middle;
-    width: 200px;
-  }
-
+  margin: 15px 0;
+}
+input[type="range"] {
+  vertical-align: middle;
+  width: 200px;
+}
 
 .x-axis path, .y-axis path {
   stroke: #666;
   stroke-width: 1.5px;
 }
 
-
+/* 折线样式 */
 .eda-line {
-  transition: stroke-width 0.3s;
+  transition: stroke-width 0.3s, opacity 0.3s;
+  stroke: #4682b4 !important;
+  opacity: 1 !important;
 }
 
-.eda-line:hover {
-  stroke-width: 4px;
+/* 确保 phase-marker 在最上层 */
+.phase-marker {
+  fill: none !important;
+  stroke: #ff5722;
+  stroke-width: 2px;
+  pointer-events: none; /* 确保不影响鼠标交互 */
 }
 
+/* 确保 phase-label 在最上层，且带有白色边框提升可见度 */
+.phase-label {
+  font-size: 12px;
+  font-weight: bold;
+  fill: #333;
+  pointer-events: none;
+  dominant-baseline: middle;
+  text-shadow: 
+      -1px -1px 3px white,
+      1px -1px 3px white,
+      -1px 1px 3px white,
+      1px 1px 3px white;
+}
 
+/* phase-marker 悬停时加大半径 */
+.phase-marker:hover {
+  r: 9;
+  fill: #e69a2f;
+}
 
+/* 交互提示框 */
 #eda-tooltip {
   min-width: 180px;
   padding: 12px;
-  background: #ffffff; 
+  background: #ffffff;
   border: 1px solid #ddd;
   border-radius: 6px;
   pointer-events: none;
-  color: #333; /* 主文字黑色 */
+  color: #333;
   font-family: Arial, sans-serif;
 }
 
 #eda-tooltip .zone-label {
   font-weight: bold;
-  display: inline-block; 
-}
-
-
-#eda-tooltip .zone-label {
+  display: inline-block;
   transition: color 0.3s ease;
-}
-
-
-
-/* 虚线样式 */
-.eda-guide-line {
-  --guide-color: #eff2f4; 
-  stroke: var(--guide-color);
-  stroke-width: 1.2px;
-  stroke-dasharray: 5, 4; 
-  opacity: 0.8;
-  transition: stroke-opacity 0.2s;
-}
-
-
-.eda-time-label {
-  fill: #666;
-  font-size: 12px;
-  text-anchor: middle;
-  font-family: Arial;
-}
-
-.eda-data-point {
-  fill: #ff3860; 
-  stroke: white;
-  stroke-width: 1.5px;
-  r: 5; 
-  pointer-events: none; 
 }
 
 /* 虚线样式 */
@@ -83,127 +75,12 @@
   stroke: #999;
   stroke-width: 1px;
   stroke-dasharray: 3,3;
-  pointer-events: none; 
-}
-
-.eda-time-label {
-  fill: #666;
-  font-size: 12px;
-  text-anchor: middle;
-  font-family: Arial;
-}
-
-.eda-data-point {
-  fill: #ff3860; 
-  stroke: white;
-  stroke-width: 1.5px;
-  r: 5; 
-  pointer-events: none; 
-}
-.eda-threshold-label {
-  font-family: 'Arial', sans-serif;
-  font-weight: 600; 
-  paint-order: stroke; 
-  stroke: white;
-  stroke-width: 2px;
-}
-
-
-#eda-tooltip {
-  background: #ffffff !important; 
-}
-
-
-
-#eda-stress-prediction {
-    margin-top: 15px;
-    padding: 12px;
-    border-left: 4px solid #ff4444;
-    background: #fff;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    max-width: 300px;
-}
-
-.eda-prediction-line {
-    stroke-opacity: 0.7;
-    animation: eda-pulse 1s infinite;
-}
-
-@keyframes eda-pulse {
-    0% { stroke-opacity: 0.7; }
-    50% { stroke-opacity: 0.3; }
-    100% { stroke-opacity: 0.7; }
-}
-
-
-
-.eda-line {
-  transition: stroke-width 0.3s, opacity 0.3s;
-}
-
-.eda-controls {
-  transition: all 0.3s;
-}
-
-
-/* eda.css */
-.phase-annotation {
-  pointer-events: none; 
-}
-
-.eda-chart {
-  margin-bottom: 60px; 
-}
-
-/* eda.css */
-.phase-marker {
-  fill: none !important;
-  stroke: #ff5722;
-  stroke-width: 2px;
-  z-index: 4; /
-}
-.eda-line {
-  z-index: 10 !important; 
-  stroke: #4682b4 !important; 
-  opacity: 1 !important; 
-}
-
-
-.phase-label {
   pointer-events: none;
-  text-shadow: 
-      -1px -1px 3px white,
-      1px -1px 3px white,
-      -1px 1px 3px white,
-      1px 1px 3px white; 
-  dominant-baseline: middle; 
+  opacity: 0.8;
+  transition: stroke-opacity 0.2s;
 }
 
-.phase-marker:hover {
-  r: 9;
-  fill: #e69a2f;
-}
-
-label[for="eda-gender-dropdown"],
-label[for="eda-dropdown"] {
-    font-weight: bold;
-}
-
-.eda-description {
-  background-color: white; 
-  border: 1px solid #ddd; 
-  padding: 30px; 
-  border-radius: 10px; /* 圆角效果 */
-  box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1); 
-}
-
-.eda-controls {
-  margin: 15px 0;
-  display: flex;
-  align-items: center;
-  gap: 15px;
-}
-
+/* 交互控制按钮 */
 #eda-play-btn {
   padding: 6px 15px;
   background: #d0d7de;
@@ -218,6 +95,54 @@ label[for="eda-dropdown"] {
   background: #647a8b;
 }
 
+/* 时间滑块 */
 #eda-time-slider {
   flex-grow: 1;
+}
+
+/* 预测区域样式 */
+.eda-description {
+  background-color: white;
+  border: 1px solid #ddd;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* 预测线动画 */
+.eda-prediction-line {
+  stroke-opacity: 0.7;
+  animation: eda-pulse 1s infinite;
+}
+
+@keyframes eda-pulse {
+  0% { stroke-opacity: 0.7; }
+  50% { stroke-opacity: 0.3; }
+  100% { stroke-opacity: 0.7; }
+}
+
+/* 控制按钮组 */
+.eda-controls {
+  margin: 15px 0;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  transition: all 0.3s;
+}
+
+/* 标签样式优化 */
+label[for="eda-gender-dropdown"],
+label[for="eda-dropdown"] {
+  font-weight: bold;
+}
+
+/* 让 phase-labels 处于最高层 */
+.phase-annotation {
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* 确保 phase-marker 和 phase-label 在最高层 */
+.phase-marker, .phase-label {
+  z-index: 20;
 }
