@@ -178,7 +178,7 @@ document.addEventListener("DOMContentLoaded", function () {
         let animationTimer = null;
 
 
-        function updateLineVisibility(currentTime) {
+        function edaupdateLineVisibility(currentTime) {
             const linePath = edaSvg.select(".eda-line");
             const totalLength = linePath.node().getTotalLength();
             
@@ -224,7 +224,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         const currentTime = startValue + (maxTime - startValue) * progress; 
                         
                         timeSlider.property("value", currentTime);
-                        updateLineVisibility(currentTime);
+                        edaupdateLineVisibility(currentTime);
                         
                         if(progress >= 1) {
                             animationTimer.stop();
@@ -240,7 +240,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             timeSlider.on("input", function() {
                 if(isPlaying) return;
-                updateLineVisibility(+this.value);
+                edaupdateLineVisibility(+this.value);
             });
         }
 
