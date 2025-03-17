@@ -174,6 +174,68 @@ document.addEventListener("DOMContentLoaded", function () {
             return colorMap[rgba] || "#333";
         }
 
+        let isPlaying = false;
+        let animationTimer = null;
+
+
+        function updateLineVisibility(currentTime) {
+            const linePath = edaSvg.select(".eda-line");
+            const totalLength = linePath.node().getTotalLength();
+            
+            // 计算当前时间的显示比例
+            const progress = currentTime / edaXScale.domain()[1];
+            const visibleLength = totalLength * progress;
+            
+            // 使用虚线技巧显示部分线条
+            linePath.style("stroke-dasharray", `${visibleLength} ${totalLength}`);
+        }
+
+        function initEDAPlayControls() {
+            const playButton = d3.select("#eda-play-btn");
+            const timeSlider = d3.select("#eda-time-slider");
+
+            playButton.on("click", function() {
+                isPlaying = !isPlaying;
+                playButton.text(isPlaying ? "⏸ Pause" : "▶ Play");
+
+                
+        
+                if(isPlaying) {
+                    const maxTime = +d3.select("#eda-time-slider").attr("max");
+                    const duration = 15000; // 15秒完成动画
+            
+                    const startTime = Date.now();
+                    const startValue = +timeSlider.property("value");
+            
+                    animationTimer = d3.interval(() => {
+                        const elapsed = Date.now() - startTime;
+                        const progress = Math.min(elapsed / duration, 1);
+                        const currentTime = startValue + (maxTime - startValue) * progress; // 使用滑块max值
+                        
+                        timeSlider.property("value", currentTime);
+                        updateLineVisibility(currentTime);
+                        
+                        if(progress >= 1) {
+                            animationTimer.stop();
+                            isPlaying = false;
+                            playButton.text("▶ Play");
+                        }
+                    }, 50);
+                    
+                } else {
+                    if(animationTimer) animationTimer.stop();
+                }
+            });
+
+            timeSlider.on("input", function() {
+                if(isPlaying) return;
+                updateLineVisibility(+this.value);
+            });
+        }
+
+
+
+
         function edaupdateChart() {
             // Get selected gender and experiment group
             const currentGender = d3.select("#eda-gender-dropdown").property("value");
@@ -211,6 +273,8 @@ document.addEventListener("DOMContentLoaded", function () {
               ];
             edaXScale.domain(xDomain);
             edaSvg.select(".x-axis").call(edaXAxis);
+
+            const maxTime = xDomain[1];
         
             const yMax = d3.max(processedData.values, d => d.EDA) || 0;
             edaYScale.domain([0, yMax]);
@@ -406,7 +470,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 <strong>Zone:</strong> <span class="zone-label" style="color:${zoneColor}">${zoneInfo}</spa
                 `;
 
-
+                
 
                 
                 edaSvg.selectAll(".eda-data-point")
@@ -444,6 +508,14 @@ document.addEventListener("DOMContentLoaded", function () {
             
             d3.select("#eda-tooltip").style("opacity", 0);
 
+            d3.select("#eda-time-slider")
+            .attr("min", 0)
+            .attr("max", maxTime)
+            .property("value", 0);
+
+            edaSvg.select(".eda-line")
+            .style("stroke-dasharray", null);
+
             
 
         }
@@ -458,3 +530,4 @@ document.addEventListener("DOMContentLoaded", function () {
         
     });
 });
+

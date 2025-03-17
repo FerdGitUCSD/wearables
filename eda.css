@@ -196,3 +196,28 @@ label[for="eda-dropdown"] {
   border-radius: 10px; /* 圆角效果 */
   box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1); 
 }
+
+.eda-controls {
+  margin: 15px 0;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+#eda-play-btn {
+  padding: 6px 15px;
+  background: #d0d7de;
+  color: rgb(7, 7, 7);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+#eda-play-btn:hover {
+  background: #647a8b;
+}
+
+#eda-time-slider {
+  flex-grow: 1;
+}
