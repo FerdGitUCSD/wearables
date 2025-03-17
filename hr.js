@@ -1830,8 +1830,7 @@ function addIntroductionSection() {
   introDiv.className = "introduction";
   introDiv.innerHTML = `
     <h2>Heart Rate Responses to Stress and Exercise</h2>
-    <p>This interactive visualization shows heart rate responses during structured protocols for stress induction, aerobic exercise, and anaerobic exercise.
-    Protocols for each visual is placed approximately where testing began. Because data is averaged for all participants, scales will not line up directly.</p>
+    <p>This interactive visualization reveals the distinctive heart rate patterns that emerge during cognitive stress, aerobic exercise, and anaerobic exercise protocols. While all three conditions elevate heart rate, each creates a unique signature that reveals how our cardiovascular system adapts to different types of challenges. Pay special attention to the annotated features that highlight key physiological moments like "Peak Intensity" during anaerobic sprints, "Recovery" periods, or "Steady State" during sustained aerobic exercise. Also note that since data is an aggregated average of all participants, some time scales will not line up perfectly.</p>
     <p class="explore">Explore the visualization by:</p>
     <ul class="explore">
       <li><strong>Hovering</strong> over the chart to see detailed heart rate data and physiological context</li>

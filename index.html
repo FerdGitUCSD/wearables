@@ -16,10 +16,22 @@
 </head>
 <body>
     <div id="main-intro">
-      <h1>Effects of Stress on the Body</h1>
+      <h1>Reading the Body: Wearable Technology Unveils Our Hidden Responses to Stress and Exercise</h1>
     
-      <p>Wearable technology is rapidly transforming the landscape of personal health monitoring by providing continuous, non-invasive insights into human physiology. The dataset examined in this project, collected using the Empatica E4 wristband, comprises a diverse array of physiological signals—including blood volume pulse (BVP), electrodermal activity (EDA), skin temperature (TEMP), and accelerometer (ACC) readings—captured during carefully structured protocols designed to elicit both acute stress responses and varying intensities of physical exertion (aerobic and anaerobic exercise). Each recording spans several hours and is meticulously annotated with event markers that delineate distinct protocol segments, such as cognitive stress tasks and controlled exercise sessions.</p>
-      <p>This dataset offers a unique opportunity to explore how the autonomic nervous system modulates heart rate and other physiological responses in different contexts. By aggregating and analyzing physiological response data across multiple participants, the project aims to uncover characteristic response patterns associated with stress and exercise. Ultimately, this exploratory investigation provides valuable insights that may inform future research in stress detection, exercise physiology, and the development of personalized health monitoring solutions.</p>
+      <p>In the constant flow of our daily lives, our bodies silently respond to every challenge we face. The beating of our hearts quickens during a stressful presentation, our skin warms during a brisk run, and our nervous system activates when we push ourselves to our physical limits. And until recently, these biological responses remained largely invisible, accessible only to those with specialized medical equipment. But the emergence of wearable technology has democratized this biological knowledge, transforming complex physiological signals into accessible data that anyone can understand. Therefore, this project aims explores how wristbands like the Empatica E4 can capture and let us visualize our body's distinctive responses to three fundamental challenges: cognitive stress, sustained aerobic exercise, and intense anaerobic bursts—revealing patterns that not only demonstrate our remarkable biological adaptability but also give us access to personalized health monitoring.</p>
+    </div>
+    <div id="protocols">
+      <h2>About the Data and Protocols</h3>
+      <p>The dataset examined in this project, collected using the Empatica E4 wristband, comprises a diverse array of physiological signals—including blood volume pulse (BVP), electrodermal activity (EDA), skin temperature (TEMP), and heart rate (HR) readings—captured during carefully structured protocols designed to elicit both acute stress responses and varying intensities of physical exertion (aerobic and anaerobic exercise). </p>
+      <ul>
+        <li><strong>AEROBIC EXERCISE:</strong> Consisted of stationary cycling for about 35 minutes with gradually increasing pace and resistance, starting slow and building to higher intensities followed by cooldown.</li>
+        <li><strong>ANAEROBIC EXERCISE:</strong> Featured short bursts (30-45 seconds) of maximum-effort cycling against high resistance, followed by recovery periods with no resistance. </li>
+        <li><strong>COGNITIVE STRESS:</strong> Involved participants completing a series of cognitive challenges including math tests, opinion tasks, and counting exercises, with rest periods in between and self-reported stress ratings. </li>
+      </ul>
+    </div>
+
+    <div id="protocol-info">
+      
     </div>
     <div id="hr1">
         <div id="controls">
@@ -38,7 +50,18 @@
           <div id="tooltip" class="tooltip"></div>
     </div>
     <div id="bvp1">
-      <h2>Blood Volume Pulse (BVP) Over Time</h2>
+      <div id="bvp-intro">
+        <h2>Blood Volume Pulse (BVP) Over Time</h2>
+        <p>Blood Volume Pulse captures the subtle changes in blood flow through arteries and veins, providing deeper insights into cardiovascular function than heart rate measurements alone. This dynamic visualization transforms raw BVP data into meaningful patterns that reveal how blood circulation responds to different forms of exertion and stress. Notice particularly how BVP fluctuations become more pronounced during intense exercise and cognitive stress challenges, with characteristic amplitude and frequency changes that could potentially serve as biomarkers for prediction.</p>
+        <p id="explore">Explore the visualization by:</p>
+        <ul>
+          <li><strong>Using the timeline slider</strong> to navigate to specific moments during experiments</li>
+          <li><strong>Adjusting animation speed</strong> to observe rapid changes or gradual transitions</li>
+          <li><strong>Toggling between conditions</strong> (aerobic, anaerobic, stress) to compare blood flow signatures</li>
+        </ul>
+      
+      </div>
+      
       <div class="control-panel">
         <div class="control-row">
           <div id="time-display">Current Time: 0.00s</div>
@@ -71,8 +94,7 @@
         <!-- The statistics panel will be dynamically inserted here -->
       </div>
     </div>
-    <p>Blood Volume Pulse (BVP) measures changes in blood flow through your arteries and veins. The data reveals consistent patterns in BVP measurements across most participants throughout the day, and provides a baseline for understanding typical cardiovascular response during various activities. But we observe significant spikes during certain activity periods, particularly during exercise or stress, which deviate from the baseline pattern. Therefore, monitoring these BVP variations could help users identify periods of cardiovascular stress and potentially adjust their activities to maintain healthier cardiovascular patterns.
-    </p>
+    
     
     
   
@@ -80,11 +102,20 @@
   
   
   <div id="eda1">
-    <h2>Electrodermal Activity (EDA) Over Time</h2>
     
-    <p class="eda-description">This interactive visualization shows  the changes of skin electrical activity (EDA) under different experimental conditions (Aerobic, Anaerobic, Stress).
-      Calculate and plot a line chart of mean EDA over time, while supporting experimental type and gender screening. The stages of the experiment are marked on the chart, and color is used to distinguish different excitation levels (calm, light, moderate, high excitation). In addition, the mouse hover can display detailed data, enhance the interactive experience, and allow users to intuitively compare EDA trends under different experiments.
-    </p>
+    <div id="eda-intro">
+      <h2>Electrodermal Activity (EDA) Over Time</h2>
+      <p>The electrical activity of your skin provides a window into your autonomic nervous system's response to challenges, often revealing stress or exertion before you're consciously aware of it. This visualization shows how EDA rises and falls during different experimental conditions, with distinct patterns emerging for each activity type. The color-coded arousal zones (Calm, Mild, Moderate, and High) provide important context for understanding the intensity of physiological activation at different points in the timeline.
+      </p>
+
+      <p id="explore">Explore the visualization by:</p>
+        <ul>
+          <li><strong>Selecting experiment types</strong> (Aerobic, Anaerobic, Stress) from the dropdown menu</li>
+          <li><strong>Filtering by gender</strong> to compare response patterns across demographic groups</li>
+          <li><strong>Following the progression</strong> along the time axis to observe response and recovery trajectories</li>
+        </ul>
+    </div>
+    
 
 
     <label for="eda-dropdown">Select Experiment:</label>
@@ -108,7 +139,19 @@
 
   
     <div id="chart-container">
-      <h2>Temperature Over Time</h2>
+      <div id="temp-intro">
+        <h2>Temperature Over Time</h2>
+        <p>Skin temperature serves as a window into how our body regulates itself during different challenges. As we exercise or experience stress, blood flow shifts and metabolism changes, creating measurable temperature patterns. This visualization compares these temperature responses across conditions, with colored threshold indicators showing when temperatures enter significant zones.
+        </p> 
+
+        <p id="explore">Explore the visualization by:</p>
+        <ul>
+          <li><strong>Selecting different activity types</strong> using checkboxes to compare temperature responses</li>
+          <li><strong>Identifying individual participants</strong> by their uniquely colored lines</li>
+          <li><strong>Use animation controls</strong> to watch the dynamic progression of temperature adaptations</li>
+        </ul>
+      </div>
+
 
         <div id="activity-legend">
           <div class="legend-title">Activity Types</div>
@@ -120,8 +163,10 @@
     </div>
     
   
-<p>This interactive visualization presents time-series temperature data collected from multiple participants across different experimental sessions, allowing users to explore temperature fluctuations over time. 
-  The line chart dynamically updates based on session selection, with each participant represented by a distinct color and an accompanying legend for easy identification, and users can filter by session to compare temperature variations across different conditions. Designed for researchers and analysts, this vi
-</p>  
+   <div id="conclusion">
+    <h2>Conclusion: The Conversation Between Mind and Body</h2>
+    <p>These visualizations reveal that bodies speak different languages when responding to mental stress versus physical exertion. These physiological signatures appear consistently across participants while showing individual variations, pointing toward potential personalized health insights. As wearable technology advances, we approach an era where biological processes become visible data streams that could transform how we understand and optimize wellbeing.</p>
+    <p>The key insight from this project is that our physiological responses create recognizable patterns that could serve as early warning systems for health conditions. By transforming complex data into visual narratives, these visualizations bridge the gap between biological phenomena and everyday understanding, offering a new language for interpreting the conversation between mind and body—one that holds the key to personalized approaches to health, stress management, and physical performance.</p>
+   </div>
 </body>
 </html>

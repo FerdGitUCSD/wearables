@@ -31,6 +31,134 @@ p {
     text-align: left;
   }
 
+#main-intro h3 {
+    text-align: center;
+}
+
+#protocols li {
+    margin-bottom: 10px;
+}
+
+#protocols {
+    background-color: #ffff;
+    border-color:#777;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 10px 40px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    text-align: left;
+    margin-top: 20px;
+}
+#protocols h2 {
+    text-align: center;
+}
+
+#conclusion {
+    margin-top: 40px;
+    background-color: #ffff;
+    border-color:#777;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 10px 40px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    text-align: left;
+  }
+
+#conclusion h2 {
+    text-align: center;
+}
+#explore {
+    text-align: center;
+  }
+.divider {
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    flex: 1;
+    padding: 1.5px;
+    background-color: rgb(0, 0, 0);
+    margin: 5px;
+  }
+
+#bvp-intro {
+    background-color: #ffff;
+    border-color:#777;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 10px 40px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    text-align: left;
+    margin-bottom: 10px;
+}
+
+#bvp-intro ul {
+    margin-top: 5px;
+    padding-left: 25px;
+    text-align: center;
+    list-style-type: none; 
+  }
+  
+#bvp-intro li {
+    margin-bottom: 5px;
+    text-align: center;
+  }
+
+#bvp-intro h2 {
+    text-align: center;
+}
+
+#eda-intro {
+    background-color: #ffff;
+    border-color:#777;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 10px 40px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    text-align: left;
+    margin-bottom: 10px;
+}
+#eda-intro h2 {
+    text-align: center;
+}
+
+#eda-intro ul {
+    margin-top: 5px;
+    padding-left: 25px;
+    text-align: center;
+    list-style-type: none; 
+  }
+  
+#eda-intro li {
+    margin-bottom: 5px;
+    text-align: center;
+  }
+
+#temp-intro {
+    background-color: #ffff;
+    border-color:#777;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 10px 40px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    text-align: left;
+    margin-bottom: 10px;
+}
+#temp-intro h2 {
+    text-align: center;
+}
+
+#temp-intro ul {
+    margin-top: 5px;
+    padding-left: 25px;
+    text-align: center;
+    list-style-type: none; 
+  }
+  
+#temp-intro li {
+    margin-bottom: 5px;
+    text-align: center;
+  }
+
 /* Section Separation Styles */
 
 /* Add a consistent section style to all main components */
