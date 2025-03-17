@@ -1,9 +1,10 @@
 body {
     font-family: "Times New Roman", sans-serif;
     font: 100%/1.5;
-    max-width: min(120ch, 80vw);
-    margin-inline: max(1em, (100% - 120ch) / 2);
+    max-width: min(130ch, 80vw);
+    margin-inline: max(1em, (100% - 130ch) / 2);
     text-align: center;
+    background-color: rgba(255, 220, 220, 0.473);
 }
 
 h1 {
@@ -11,6 +12,7 @@ h1 {
     font-weight: 700;
     margin-block: 0.5em;
     text-align: center;
+    
 }
 
 p {
@@ -19,6 +21,15 @@ p {
     text-align: justify;
 }
 
+#main-intro {
+    background-color: #ffff;
+    border-color:#777;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 10px 40px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    text-align: left;
+  }
 
 /* Section Separation Styles */
 
@@ -86,6 +97,8 @@ p {
     margin-top: 20px;
     line-height: 1.6;
   }
+
+
   
   /* Make sure controls are consistently styled */
   .control-panel, #controls, #eda-dropdown, #eda-gender-dropdown, #activity-legend {
