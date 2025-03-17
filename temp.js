@@ -84,7 +84,7 @@ d3.csv('data/combined_temperature_data2.csv').then(function(data) {
     .call(d3.axisBottom(timeScale));
     
     svg.append('text')
-        .attr('transform', `translate(${width / 2},${height + 65})`)
+        .attr('transform', `translate(${width / 2},${height + 70})`)
         .style('text-anchor', 'middle')
         .text('Time (seconds)');
         
@@ -143,8 +143,8 @@ d3.csv('data/combined_temperature_data2.csv').then(function(data) {
         .attr('x', -thermHeight/2)
         .attr('y', -100)
         .attr('text-anchor', 'middle')
-        .attr('font-size', '14px')
-        .attr('font-weight', 'bold')
+        .style('font-size', '16px')
+        // .attr('font-weight', 'bold')
         .text('Temperature (°C)');
     
     // Add tick marks with improved styling
