@@ -187,3 +187,10 @@ input[type=range]::-webkit-slider-thumb {
 .time-indicator {
     pointer-events: none;
 }
+
+#time-display {
+    display: block !important;  /* 🔴 Ensure it is visible */
+    color: black !important;
+    font-size: 18px;
+    text-align: center;
+}

@@ -313,16 +313,16 @@ d3.csv('data/combined_temperature_data2.csv').then(function(data) {
         .html('↻ Reset');
     
     // Add time display
-    // const timeDisplay = controlPanel.append('div')
-    //     .attr('id', 'time-display')
-    //     .style('margin', '10px 20px')
-    //     .style('padding', '8px 15px')
-    //     .style('background', '#fff')
-    //     .style('border-radius', '4px')
-    //     .style('font-weight', 'bold')
-    //     .style('min-width', '120px')
-    //     .style('text-align', 'center')
-    //     .text('Time: 0s');
+    const timeDisplay = controlPanel.append('div')
+        .attr('id', 'time-display')
+        .style('margin', '10px 20px')
+        .style('padding', '8px 15px')
+        .style('background', '#fff')
+        .style('border-radius', '4px')
+        .style('font-weight', 'bold')
+        .style('min-width', '120px')
+        .style('text-align', 'center')
+        .text('Time: 0s');
     
     // Add speed control slider with better labeling
     const speedControlContainer = controlPanel.append('div')
@@ -356,6 +356,18 @@ d3.csv('data/combined_temperature_data2.csv').then(function(data) {
         .attr('id', 'speed-value')
         .style('margin-top', '5px')
         .text('20%');
+
+    // Add temperature display
+    controlPanel.append('div')
+        .attr('id', 'temp-value')
+        .style('margin', '10px 20px')
+        .style('padding', '8px 15px')
+        .style('background', '#fff')
+        .style('border-radius', '4px')
+        .style('font-weight', 'bold')
+        .style('min-width', '120px')
+        .style('text-align', 'center')
+        .text('Temperature: --°C');
     
     // Function to update the thermometer based on the current time
     function updateThermometer(time) {
@@ -371,7 +383,6 @@ d3.csv('data/combined_temperature_data2.csv').then(function(data) {
         selectedSessions.forEach(condition => {
             const filteredData = data.filter(d => 
                 d.condition === condition && 
-                d.temperature <= 40 &&
                 d.time <= time
             );
             
@@ -382,10 +393,15 @@ d3.csv('data/combined_temperature_data2.csv').then(function(data) {
                     return (Math.abs(curr.time - time) < Math.abs(prev.time - time) ? curr : prev);
                 });
                 
-                const temp = closestData.temperature;
+                // Check for valid temperature (prevent negative heights)
+                let temp = closestData.temperature;
                 
-                // Update the thermometer mercury height and position with smooth transition
-                const mercuryHeight = thermHeight - tempScale(temp);
+                // Clamp temperature to scale domain to prevent negative heights
+                temp = Math.max(tempScale.domain()[0], Math.min(tempScale.domain()[1], temp));
+                
+                // Calculate mercury height (ensure it's not negative)
+                const mercuryHeight = Math.max(0, thermHeight - tempScale(temp));
+                
                 const mercury = mercuryElements[condition].tube;
                 const bulbMercury = mercuryElements[condition].bulb;
 
@@ -393,16 +409,16 @@ d3.csv('data/combined_temperature_data2.csv').then(function(data) {
                 const opacity = selectedSessions.length > 1 ? 0.6 : 1; // Semi-transparent for multiple sessions
                 
                 mercury.transition()
-                        .duration(animationSpeed * 0.8) // Make transition slightly faster than animation speed
-                        .attr('y', tempScale(temp))
-                        .attr('height', mercuryHeight)
-                        .attr('opacity', opacity);
+                    .duration(animationSpeed * 0.8) // Make transition slightly faster than animation speed
+                    .attr('y', tempScale(temp))
+                    .attr('height', mercuryHeight)
+                    .attr('opacity', opacity);
                 
                 bulbMercury.attr('opacity', opacity);
                 
                 // Update temperature value display
                 d3.select('#temp-value')
-                    .text(`${temp.toFixed(2)}°C`)
+                    .text(`Temp: ${temp.toFixed(2)}°C`)
                     .style('color', getTemperatureColor(temp));
                 
                 // Update phase highlight if we have exactly one session selected
@@ -523,7 +539,6 @@ d3.csv('data/combined_temperature_data2.csv').then(function(data) {
     
     // Animation function
     function animate() {
-        
         if (currentTime >= maxTime) {
             stopAnimation();
             return;
@@ -582,7 +597,6 @@ d3.csv('data/combined_temperature_data2.csv').then(function(data) {
         .style('font-weight', 'bold')
         .style('font-size', '16px');
     
-
     // Create the legend container
     const legend = d3.select("#activity-legend");
     const conditionDescriptions = {
@@ -714,6 +728,8 @@ d3.csv('data/combined_temperature_data2.csv').then(function(data) {
             // Otherwise, just update with the current time
             updateThermometer(currentTime);
         }
-        
     }
+    
+    // Initialize visualization with the first frame
+    updateThermometer(0);
 });

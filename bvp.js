@@ -204,28 +204,34 @@ uniquePhases.forEach(phase => {
 // Unified tooltip handler
 // Update tooltip function to show BVP value, time, and arousal phase
 function setupTooltipHandlers() {
+    // Remove previous event listeners to prevent duplication
+    mouseArea.on("mousemove", null).on("mouseout", null);
+
     mouseArea.on("mousemove", function(event) {
-        if (isPlaying) return;  // 🔴 Do not show tooltip during animation
-    
+        if (isPlaying) return;  // 🔴 Stop tooltip during animation
+
         const [mouseX] = d3.pointer(event);
         const hoveredTime = xScale.invert(mouseX);
-    
+
         // Find the closest actual data point
-        const closestPoint = data.reduce((prev, curr) =>
+        const filteredData = data.filter(d => d.time_s <= hoveredTime);
+        if (filteredData.length === 0) return;
+
+        const closestPoint = filteredData.reduce((prev, curr) =>
             Math.abs(curr.time_s - hoveredTime) < Math.abs(prev.time_s - hoveredTime) ? curr : prev
         );
-    
+
         if (!closestPoint) return;
-    
+
         console.log("✅ Tooltip should show:", closestPoint);
-    
+
         // Get the bounding box of the chart container
         const container = document.getElementById("bvp-container").getBoundingClientRect();
-    
+
         // Adjust position relative to the chart
         const tooltipX = Math.min(event.clientX - container.left + 20, container.width - 250);
         const tooltipY = Math.min(event.clientY - container.top + 20, container.height - 100);
-    
+
         tooltip
             .style("opacity", 1)
             .style("left", `${tooltipX}px`)
@@ -236,17 +242,16 @@ function setupTooltipHandlers() {
                 </div>
                 <div><strong>Time:</strong> ${closestPoint.time_s.toFixed(2)}s</div>
                 <div><strong>BVP Value:</strong> ${closestPoint.bvp.toFixed(3)}</div>
-                <div><strong>Arousal Phase:</strong> <span style="color:#ff3333; font-weight: bold;">${closestPoint.phase}</span></div>
+                <div><strong>Activity Phase:</strong> <span style="color:#ff3333; font-weight: bold;">${closestPoint.phase}</span></div>
             `);
     })
     .on("mouseout", function() {
         if (!isPlaying) {
-            tooltip.style("opacity", 0);  // 🔴 Only hide tooltip when mouse leaves while paused
+            tooltip.style("opacity", 0);  // Hide tooltip when leaving
         }
     });
-    
-    
 }
+
 
 
     function addTrendLine(data) {
